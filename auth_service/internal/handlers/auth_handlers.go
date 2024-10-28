@@ -31,6 +31,6 @@ func (us *UserServer) RegisterHandler(ctx *gin.Context) {
 	ctx.Status(http.StatusCreated)
 }
 
-func LoginUser(ctx *gin.Context) {
+func (us *UserServer) LoginUser(ctx *gin.Context) {
 
 }
