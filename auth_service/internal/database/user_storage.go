@@ -3,6 +3,7 @@ package database
 import (
 	"CourseProject/auth_service/internal/entity"
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -28,4 +29,19 @@ func (us *UserStorage) Post(newUser entity.User) error {
 		return fmt.Errorf("zero rows were inserted")
 	}
 	return nil
+}
+
+func (us *UserStorage) Get(userName string) (*entity.User, error) {
+	query := "SELECT id, username, password FROM users WHERE username = $1"
+
+	row := us.DB.QueryRow(query, userName)
+	var userFromDB entity.User
+	err := row.Scan(&userFromDB.ID, &userFromDB.Username, &userFromDB.Password)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("there is no rows with passed username: %w", err)
+		}
+		return nil, fmt.Errorf("unable to scan user from selected row: %w", err)
+	}
+	return &userFromDB, nil
 }

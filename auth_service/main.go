@@ -21,4 +21,9 @@ func main() {
 
 	router.POST("/register", userServer.RegisterHandler)
 	router.POST("/login", userServer.LoginUser)
+
+	err = router.Run(":8080")
+	if err != nil {
+		log.Fatalf("unable to run server on port (:8000): %s", err)
+	}
 }
