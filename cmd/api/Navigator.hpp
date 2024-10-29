@@ -1,3 +1,7 @@
+
+#ifndef NAVIGATOR_HPP
+#define NAVIGATOR_HPP
+
 #include <drogon/drogon.h>
 #include <drogon/HttpController.h>
 
@@ -19,3 +23,8 @@ protected:
   void courses_list(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
 };
+
+#endif // !NAVIGATOR_HPP
+
+
+
