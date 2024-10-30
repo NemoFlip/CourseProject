@@ -8,11 +8,9 @@ import (
 	"log"
 )
 
-var dbname = "usersdb"
-
 func main() {
 	router := gin.Default()
-	db, err := pkg.ConnectToDB(dbname)
+	db, err := pkg.ConnectToDB("usersdb")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -24,6 +22,6 @@ func main() {
 
 	err = router.Run(":8080")
 	if err != nil {
-		log.Fatalf("unable to run server on port (:8000): %s", err)
+		log.Fatalf("unable to run server on port (:8080): %s", err)
 	}
 }
