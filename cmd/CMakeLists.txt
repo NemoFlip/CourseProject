@@ -15,9 +15,12 @@ project(cmd)
 find_package(Boost CONFIG REQUIRED)
 find_package(Drogon CONFIG REQUIRED)
 
+
 add_executable(${PROJECT_NAME} app/main.cpp
-              api/Navigator.hpp
-)
+              include/login/login.hpp
+ "src/Navigator.cpp")
+
+target_link_directories(${PROJECT_NAME} PUBLIC include/api)
 target_link_libraries(${PROJECT_NAME} Drogon::Drogon ${BOOST_LIBS})
 
 include_directories(${Boost_INCLUDE_DIRS})
