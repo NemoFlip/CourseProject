@@ -12,7 +12,7 @@ drogon::HttpRequestPtr createNewRequest(const drogon::HttpRequestPtr& req, const
   return std::move(newReq);
 }
 
-void login(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {  
+void LoginController::login(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
   auto client = drogon::HttpClient::newHttpClient(servisesURI::auth_service);
   auto newReq = createNewRequest(req, "/login");
 
@@ -28,3 +28,4 @@ void login(const drogon::HttpRequestPtr& req, std::function<void(const drogon::H
       }
     });
 }
+
