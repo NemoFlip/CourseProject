@@ -1,9 +1,10 @@
 
-#ifndef NAVIGATOR_HPP
-#define NAVIGATOR_HPP
+#ifndef LOGIN_CONTROLLER_HPP
+#define LOGIN_CONTROLLER_HPP
 
 #include <drogon/drogon.h>
 #include <drogon/HttpController.h>
+
 
 class LoginController : public drogon::HttpController<LoginController> {
 public:
@@ -27,7 +28,7 @@ protected:
 
 };
 
-#endif // !NAVIGATOR_HPP
+#endif // !LOGIN_CONTROLLER_HPP
 
 
 
