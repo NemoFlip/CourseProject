@@ -17,10 +17,12 @@ find_package(Drogon CONFIG REQUIRED)
 
 
 add_executable(${PROJECT_NAME} app/main.cpp
-              include/login/login.hpp
- "src/Navigator.cpp")
+              src/LoginController.cpp
+              src/ProfileController.cpp
+              include/login/LoginController.hpp
+              include/profile/ProfileController.hpp
+)
 
-target_link_directories(${PROJECT_NAME} PUBLIC include/api)
 target_link_libraries(${PROJECT_NAME} Drogon::Drogon ${BOOST_LIBS})
 
 include_directories(${Boost_INCLUDE_DIRS})
