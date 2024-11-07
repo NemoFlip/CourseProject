@@ -6,9 +6,9 @@ services:
     ports:
       - 8080:8080
     depends_on:
-      postgres:
+      postgres_users:
         condition: service_healthy
-  postgres:
+  postgres_users:
     image: postgres
     ports:
       - 5432:5432

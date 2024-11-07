@@ -10,7 +10,7 @@ import (
 
 func main() {
 	router := gin.Default()
-	db, err := pkg.ConnectToDB("usersdb")
+	db, err := pkg.PostgresConnect("usersdb")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}

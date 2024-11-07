@@ -52,6 +52,6 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 	tokenCredentials := fmt.Sprintf("%s:%s", user.Username, user.Password)
 	token := base64.StdEncoding.EncodeToString([]byte(tokenCredentials))
 	ctx.Writer.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
-
+	fmt.Println(userFromDB.ID)
 	// TODO: implement sessions
 }
