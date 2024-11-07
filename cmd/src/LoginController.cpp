@@ -2,8 +2,7 @@
 #include "../include/servisesURIs.hpp"
 #include <drogon/HttpClient.h>
 
-void resendRequest(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback, 
-  const std::string& path) 
+void resendRequest(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback, const std::string& path) 
 {
   auto client = drogon::HttpClient::newHttpClient(servisesURI::auth_service);
   auto newReq = drogon::HttpRequest::newHttpRequest();
