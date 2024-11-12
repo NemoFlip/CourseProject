@@ -21,3 +21,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  migrate_users:
+    image: gomicro/goose
+    command: goose -dir /app/migrations postgres "postgresql://admin:admin@postgres_users:5432/usersdb?sslmode=disable" up
+    volumes:
+      - ./auth_service/internal/database/migrations:/app/migrations
+    depends_on:
+      postgres_users:
+        condition: service_healthy

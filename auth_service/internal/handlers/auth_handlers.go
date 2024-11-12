@@ -30,7 +30,7 @@ func (us *UserServer) RegisterHandler(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	ctx.Status(http.StatusCreated)
+	ctx.JSON(http.StatusCreated, gin.H{"message": "User registered successfully", "id": newUser.ID})
 }
 
 func (us *UserServer) LoginUser(ctx *gin.Context) {
@@ -52,6 +52,6 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 	tokenCredentials := fmt.Sprintf("%s:%s", user.Username, user.Password)
 	token := base64.StdEncoding.EncodeToString([]byte(tokenCredentials))
 	ctx.Writer.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	fmt.Println(userFromDB.ID)
+
 	// TODO: implement sessions
 }

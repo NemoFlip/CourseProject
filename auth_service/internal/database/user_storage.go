@@ -16,8 +16,8 @@ func NewUserStorage(db *sql.DB) *UserStorage {
 }
 
 func (us *UserStorage) Post(newUser entity.User) error {
-	query := "INSERT INTO users (id, username, password) VALUES ($1, $2, $3)"
-	result, err := us.DB.Exec(query, newUser.ID, newUser.Username, newUser.Password)
+	query := "INSERT INTO users (id, username, email, phone, password) VALUES ($1, $2, $3, CASE WHEN $4 = '' THEN NULL ELSE $4 END, $5)"
+	result, err := us.DB.Exec(query, newUser.ID, newUser.Username, newUser.Email, newUser.Phone, newUser.Password)
 	if err != nil {
 		return fmt.Errorf("unable to insert new user into users database: %w", err)
 	}
@@ -32,7 +32,7 @@ func (us *UserStorage) Post(newUser entity.User) error {
 }
 
 func (us *UserStorage) Get(userName string) (*entity.User, error) {
-	query := "SELECT id, username, password FROM users WHERE username = $1"
+	query := "SELECT id, username, email, phone, password FROM users WHERE username = $1"
 
 	row := us.DB.QueryRow(query, userName)
 	var userFromDB entity.User
