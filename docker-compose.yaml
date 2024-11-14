@@ -8,6 +8,8 @@ services:
     depends_on:
       postgres_users:
         condition: service_healthy
+    environment:
+      - JWT_SECRET_KEY
   postgres_users:
     image: postgres
     ports:

@@ -3,12 +3,14 @@ package handlers
 import (
 	"CourseProject/auth_service/internal/database"
 	"CourseProject/auth_service/internal/entity"
-	"encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"log"
 	"net/http"
+	"os"
+	"time"
 )
 
 type UserServer struct {
@@ -48,10 +50,26 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 		log.Printf("incorrect password")
 		return
 	}
-
-	tokenCredentials := fmt.Sprintf("%s:%s", user.Username, user.Password)
-	token := base64.StdEncoding.EncodeToString([]byte(tokenCredentials))
-	ctx.Writer.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
-
-	// TODO: implement sessions
+	payload := jwt.MapClaims{
+		"sub": user.Email,
+		"exp": time.Now().Add(time.Hour * 72).Unix(),
+	}
+	jwtSecret, exists := os.LookupEnv("JWT_SECRET_KEY")
+	if !exists {
+		log.Printf("JWT_SECRET_KEY is not found")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	jwtTokenString, err := token.SignedString(jwtSecret)
+	if err != nil {
+		log.Printf("unable to sign jwt token: %s", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", jwtTokenString))
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "login successfully",
+		"token":   jwtTokenString,
+	})
 }

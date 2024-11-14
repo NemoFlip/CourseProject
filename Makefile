@@ -1,7 +1,7 @@
-all: run
+all: build run
 
-run: build
-	docker-compose up
+run:
+	docker-compose up -d
 
 build:
 	docker-compose build
