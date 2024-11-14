@@ -1,0 +1,8 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: This is the auth service of course project
+  title: Auth Service
+paths: {}
+swagger: "2.0"

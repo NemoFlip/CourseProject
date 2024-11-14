@@ -11,6 +11,8 @@ COPY auth_service/ auth_service/
 
 COPY pkg/ pkg/
 
+COPY docs/ docs/
+
 RUN go build -o ./auth_main ./auth_service/main.go
 
 # Stage 2: final image
