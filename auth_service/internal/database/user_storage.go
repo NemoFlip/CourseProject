@@ -36,7 +36,7 @@ func (us *UserStorage) Get(userName string) (*entity.User, error) {
 
 	row := us.DB.QueryRow(query, userName)
 	var userFromDB entity.User
-	err := row.Scan(&userFromDB.ID, &userFromDB.Username, &userFromDB.Password)
+	err := row.Scan(&userFromDB.ID, &userFromDB.Username, &userFromDB.Email, &userFromDB.Phone, &userFromDB.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("there is no rows with passed username: %w", err)

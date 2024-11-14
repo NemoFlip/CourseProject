@@ -13,9 +13,8 @@ import (
 
 // @title Auth Service
 // @description This is the auth service of course project
-// @host 127.0.0.1:8080
+// @host localhost:8080
 // @BasePath /
-
 func main() {
 	router := gin.Default()
 	db, err := pkg.PostgresConnect("usersdb")
