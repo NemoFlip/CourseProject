@@ -13,7 +13,7 @@ COPY pkg/ pkg/
 
 COPY docs/ docs/
 
-RUN go build -o ./auth_main ./auth_service/main.go
+RUN go build -o ./auth_main ./auth_service/cmd/app/main.go
 
 # Stage 2: final image
 FROM alpine:latest
