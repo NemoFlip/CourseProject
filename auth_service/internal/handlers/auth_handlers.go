@@ -30,7 +30,7 @@ func NewUserServer(userStorage database.UserStorage) *UserServer {
 // @Success 201 {object} entity.AuthResponse
 // @Failure 400 {object} entity.ErrorResponse
 // @Failure 500 {object} entity.ErrorResponse
-// @Router /register [post]
+// @Router /registration [post]
 func (us *UserServer) RegisterHandler(ctx *gin.Context) {
 	var newUser entity.User
 	if err := ctx.BindJSON(&newUser); err != nil {

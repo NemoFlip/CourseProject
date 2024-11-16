@@ -24,7 +24,7 @@ func main() {
 	userStorage := database.NewUserStorage(db)
 	userServer := handlers.NewUserServer(*userStorage)
 
-	router.POST("/register", userServer.RegisterHandler)
+	router.POST("/registration", userServer.RegisterHandler)
 	router.POST("/login", userServer.LoginUser)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
