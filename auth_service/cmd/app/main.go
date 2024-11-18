@@ -12,7 +12,7 @@ import (
 )
 
 // @title Auth Service
-// @description This is the auth service of course project
+// @description This is the auth services of course project
 // @host localhost:8080
 // @BasePath /
 func main() {

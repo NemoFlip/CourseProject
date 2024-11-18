@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users(
     username VARCHAR(25) NOT NULL,
     email VARCHAR(50) NOT NULL,
     phone VARCHAR(18) NULL DEFAULT NULL,
-    password VARCHAR(25) NOT NULL
+    password VARCHAR(100) NOT NULL
 );
 -- +goose StatementEnd
 

@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the auth service of course project",
+        "description": "This is the auth services of course project",
         "title": "Auth Service",
         "contact": {}
     },
@@ -54,7 +54,7 @@
                 }
             }
         },
-        "/register": {
+        "/registration": {
             "post": {
                 "description": "register user by credentials",
                 "consumes": [

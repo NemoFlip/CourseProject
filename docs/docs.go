@@ -61,7 +61,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/register": {
+        "/registration": {
             "post": {
                 "description": "register user by credentials",
                 "consumes": [
@@ -163,7 +163,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Auth Service",
-	Description:      "This is the auth service of course project",
+	Description:      "This is the auth services of course project",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

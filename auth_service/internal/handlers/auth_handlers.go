@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"os"
@@ -39,6 +40,12 @@ func (us *UserServer) RegisterHandler(ctx *gin.Context) {
 		return
 	}
 	newUser.ID = uuid.New().String()
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 4)
+	if err != nil {
+		log.Printf("unable to hash the password")
+		return
+	}
+	newUser.Password = string(hashedPassword)
 	if err := us.userStorage.Post(newUser); err != nil {
 		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "unable to post new user"})
@@ -70,7 +77,8 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "User isn't registered"})
 		return
 	}
-	if user.Password != userFromDB.Password {
+	err = bcrypt.CompareHashAndPassword([]byte(userFromDB.Password), []byte(user.Password))
+	if err != nil {
 		log.Printf("incorrect password")
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "incorrect password"})
 		return
