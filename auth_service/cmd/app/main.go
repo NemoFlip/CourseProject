@@ -3,12 +3,14 @@ package main
 import (
 	"CourseProject/auth_service/internal/database"
 	"CourseProject/auth_service/internal/handlers"
+	"CourseProject/auth_service/pkg/auth"
 	_ "CourseProject/docs"
 	"CourseProject/pkg"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"log"
+	"os"
 )
 
 // @title Auth Service
@@ -21,11 +23,19 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	userStorage := database.NewUserStorage(db)
-	userServer := handlers.NewUserServer(*userStorage)
 
-	router.POST("/registration", userServer.RegisterHandler)
+	jwtSecret, exists := os.LookupEnv("JWT_SECRET_KEY")
+	if !exists {
+		log.Printf("unable to parse jwt secret key from environment")
+		return
+	}
+	tokenManager := auth.NewTokenManager(jwtSecret)
+	userStorage := database.NewUserStorage(db)
+	userServer := handlers.NewUserServer(*userStorage, *tokenManager)
+
+	router.POST("/registration", userServer.RegisterUser)
 	router.POST("/login", userServer.LoginUser)
+	router.POST("/logout", userServer.LogoutUser)
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
