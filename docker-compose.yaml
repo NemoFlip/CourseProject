@@ -1,4 +1,11 @@
 services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro 
+
   auth_service:
     build:
       context: .
@@ -10,6 +17,7 @@ services:
         condition: service_healthy
     environment:
       - JWT_SECRET_KEY
+
   postgres_users:
     image: postgres
     ports:
@@ -23,6 +31,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   migrate_users:
     image: gomicro/goose
     command: goose -dir /app/migrations postgres "postgresql://admin:admin@postgres_users:5432/usersdb?sslmode=disable" up
@@ -31,6 +40,7 @@ services:
     depends_on:
       postgres_users:
         condition: service_healthy
+
   auth_tests:
     build:
       context: .
