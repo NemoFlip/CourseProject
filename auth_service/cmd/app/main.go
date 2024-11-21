@@ -15,6 +15,9 @@ import (
 
 // @title Auth Service
 // @description This is the auth services of course project
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 // @host localhost:8080
 // @BasePath /
 func main() {
