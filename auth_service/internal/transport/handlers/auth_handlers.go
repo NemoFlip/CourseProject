@@ -105,7 +105,6 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "Bearer <token>"
 // @Security BearerAuth
 // @Success 200 {nil} nil "Token is valid"
 // @Failure 401 {nil} nil "User is unauthorized"

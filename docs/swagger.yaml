@@ -69,12 +69,6 @@ paths:
       consumes:
       - application/json
       description: logout user with token's validation
-      parameters:
-      - description: Bearer <token>
-        in: header
-        name: Authorization
-        required: true
-        type: string
       produces:
       - application/json
       responses:

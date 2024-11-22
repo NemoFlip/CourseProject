@@ -46,5 +46,4 @@ func (tm *TokenManager) SignToken(token *jwt.Token) (string, error) {
 		return "", fmt.Errorf("unable to sign jwt token: %s", err)
 	}
 	return jwtTokenString, nil
-
 }
