@@ -5,8 +5,6 @@
         "title": "Auth Service",
         "contact": {}
     },
-    "host": "localhost:8080",
-    "basePath": "/",
     "paths": {
         "/login": {
             "post": {
@@ -49,6 +47,40 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/entity.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "logout user with token's validation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "401": {
+                        "description": "User is unauthorized",
+                        "schema": {
+                            "type": "nil"
                         }
                     }
                 }
@@ -145,6 +177,13 @@
                     "example": "user_1234"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

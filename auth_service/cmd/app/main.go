@@ -2,7 +2,8 @@ package main
 
 import (
 	"CourseProject/auth_service/internal/database"
-	"CourseProject/auth_service/internal/handlers"
+	"CourseProject/auth_service/internal/transport/handlers"
+	"CourseProject/auth_service/internal/transport/middleware"
 	"CourseProject/auth_service/pkg/auth"
 	_ "CourseProject/docs"
 	"CourseProject/pkg"
@@ -15,6 +16,9 @@ import (
 
 // @title Auth Service
 // @description This is the auth services of course project
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 // @host localhost:8080
 // @BasePath /
 func main() {
@@ -35,7 +39,12 @@ func main() {
 
 	router.POST("/registration", userServer.RegisterUser)
 	router.POST("/login", userServer.LoginUser)
-	router.POST("/logout", userServer.LogoutUser)
+
+	checkAuth := middleware.CheckAuthorization(tokenManager)
+	g1 := router.Group("/", checkAuth)
+	{
+		g1.POST("/logout", userServer.LogoutUser)
+	}
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

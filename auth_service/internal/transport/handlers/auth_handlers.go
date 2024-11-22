@@ -98,12 +98,18 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 		return
 	}
 	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", jwtTokenString))
-	//ctx.JSON(http.StatusOK, gin.H{
-	//	"message": "login successfully",
-	//	"token":   jwtTokenString,
-	//})
 }
 
+// @Summary Logout user
+// @Description logout user with token's validation
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {nil} nil "Token is valid"
+// @Failure 401 {nil} nil "User is unauthorized"
+// @Faiulre 400 {nil} nil "Invalid token is sent"
+// @Router /logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	authHeader := ctx.GetHeader("Authorization")
 
