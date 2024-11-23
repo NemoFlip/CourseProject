@@ -15,6 +15,6 @@ find_package(Drogon CONFIG REQUIRED)
 
 add_executable(${PROJECT_NAME} app/main.cpp
                include/cntrlr/cntrlr.hpp
-)
+ "src/cntrlr.cpp")
 
 target_link_libraries(${PROJECT_NAME} Drogon::Drogon ${BOOST_LIBS} spdlog)
