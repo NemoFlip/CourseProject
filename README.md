@@ -8,6 +8,7 @@ Description: course platform where user can authorize, register for the courses,
 Create .env file in root directory and add following value:
 ```
 JWT_SECRET_KEY=<random string>
+REDIS_PASSWORD=<your password>
 ```
 
 
