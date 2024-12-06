@@ -6,22 +6,20 @@ import (
 	"CourseProject/auth_service/pkg/auth"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"strings"
-	"time"
 )
 
 type UserServer struct {
-	userStorage  database.UserStorage
-	tokenManager auth.TokenManager
+	userStorage    database.UserStorage
+	refreshStorage database.RefreshStorage
+	tokenManager   auth.TokenManager
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager}
+func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage}
 }
 
 // @Summary Register user
@@ -42,13 +40,14 @@ func (us *UserServer) RegisterUser(ctx *gin.Context) {
 		return
 	}
 	newUser.ID = uuid.New().String()
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 4)
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("unable to hash the password")
 		return
 	}
 	newUser.Password = string(hashedPassword)
-	if err := us.userStorage.Post(newUser); err != nil {
+	if err = us.userStorage.Post(newUser); err != nil {
 		log.Println(err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "unable to post new user"})
 		return
@@ -81,23 +80,23 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(userFromDB.Password), []byte(user.Password))
 	if err != nil {
-		log.Printf("incorrect password")
+		log.Printf("incorrect password: %s", err)
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	payload := jwt.MapClaims{
-		"sub": user.Email,
-		"exp": time.Now().Add(time.Hour * 72).Unix(),
-	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	jwtTokenString, err := us.tokenManager.SignToken(token)
+	accessToken, refreshToken, err := us.tokenManager.GenerateBothTokens(us.refreshStorage, userFromDB.ID)
 	if err != nil {
 		log.Println(err)
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", jwtTokenString))
+	ctx.SetCookie("access_token", accessToken, 900, "/", "", false, true)
+	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	ctx.JSON(http.StatusOK, gin.H{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
 }
 
 // @Summary Logout user
@@ -111,26 +110,5 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Faiulre 400 {nil} nil "Invalid token is sent"
 // @Router /logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
-	authHeader := ctx.GetHeader("Authorization")
-
-	if len(authHeader) == 0 {
-		log.Printf("authroization token is absent")
-		ctx.Writer.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	bearerToken := strings.Split(authHeader, " ")
-	if bearerToken[0] != "Bearer" || len(bearerToken) != 2 {
-		log.Printf("invalid format of auth token")
-		ctx.Writer.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	tokenString := bearerToken[1]
-	err := us.tokenManager.ValidateToken(tokenString)
-	if err != nil {
-		log.Println(err)
-		ctx.Writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	ctx.SetCookie("Authorization", "", -1, "/", "", false, true)
 }
