@@ -6,9 +6,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 )
@@ -101,34 +103,18 @@ func (tm *TokenManager) GenerateBothTokens(refreshStorage database.RefreshStorag
 	return newAccessToken, newRefreshToken, nil
 }
 
-//func (tm *TokenManager) GetClaims(ctx *gin.Context) (string, string, bool) {
-//	userID, exists := ctx.Get("userID")
-//	if !exists {
-//		log.Println("invalid token credentials: userID is absent")
-//		ctx.Writer.WriteHeader(http.StatusUnauthorized)
-//		return "", "", false
-//	}
-//
-//	inputIP, exists := ctx.Get("inputIP")
-//	if !exists {
-//		log.Println("invalid token credentials: ip is absent")
-//		ctx.Writer.WriteHeader(http.StatusUnauthorized)
-//		return "", "", false
-//	}
-//
-//	userIDStr, ok := userID.(string)
-//	if !ok {
-//		log.Println("userID is not a string")
-//		ctx.Writer.WriteHeader(http.StatusUnauthorized)
-//		return "", "", false
-//	}
-//
-//	inputIPStr, ok := inputIP.(string)
-//	if !ok {
-//		log.Println("inputIP is not a string")
-//		ctx.Writer.WriteHeader(http.StatusUnauthorized)
-//		return "", "", false
-//	}
-//
-//	return userIDStr, inputIPStr, true
-//}
+func (tm *TokenManager) GetUserID(ctx *gin.Context) (string, bool) {
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		log.Println("invalid token credentials: userID is absent")
+		ctx.Writer.WriteHeader(http.StatusUnauthorized)
+		return "", false
+	}
+	userIDStr, ok := userID.(string)
+	if !ok {
+		log.Println("userID is not a string")
+		ctx.Writer.WriteHeader(http.StatusUnauthorized)
+		return "", false
+	}
+	return userIDStr, true
+}

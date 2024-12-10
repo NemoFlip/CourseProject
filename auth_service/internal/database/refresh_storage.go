@@ -45,3 +45,11 @@ func (rs *RefreshStorage) Get(userID string) (string, error) {
 	}
 	return val, err
 }
+
+func (rs *RefreshStorage) Delete(userID string) error {
+	err := rs.client.Del(rs.ctx, userID).Err()
+	if err != nil {
+		return fmt.Errorf("unable to delete row by user_id(%s): %s", userID, err)
+	}
+	return nil
+}

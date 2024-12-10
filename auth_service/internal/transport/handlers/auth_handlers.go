@@ -110,5 +110,16 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Faiulre 400 {nil} nil "Invalid token is sent"
 // @Router /logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
+	// Delete refresh token from storage
+	userID, ok := us.tokenManager.GetUserID(ctx)
+	if !ok {
+		return
+	}
+	if err := us.refreshStorage.Delete(userID); err != nil {
+		log.Println(err)
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// Delete access_token from browser's cookie
 	ctx.SetCookie("Authorization", "", -1, "/", "", false, true)
 }

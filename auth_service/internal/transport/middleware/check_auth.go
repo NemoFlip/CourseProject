@@ -41,6 +41,12 @@ func CheckAuthorization(tm *auth.TokenManager) gin.HandlerFunc {
 			ctx.Writer.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		userID, ok := claims["sub"].(string)
+		if !ok {
+			log.Println("unable to get `sub` claim from token")
+			ctx.Writer.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 		exp, ok := claims["exp"].(float64)
 		if !ok {
 			log.Println("unable to get `ip` claim from token")
@@ -53,6 +59,8 @@ func CheckAuthorization(tm *auth.TokenManager) gin.HandlerFunc {
 			ctx.Writer.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		ctx.Set("userID", userID)
 
+		ctx.Next()
 	}
 }
