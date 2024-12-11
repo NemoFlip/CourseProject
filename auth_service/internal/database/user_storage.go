@@ -31,10 +31,8 @@ func (us *UserStorage) Post(newUser entity.User) error {
 	return nil
 }
 
-func (us *UserStorage) Get(userName string) (*entity.User, error) {
-	query := "SELECT id, username, email, phone, password FROM users WHERE username = $1"
-
-	row := us.DB.QueryRow(query, userName)
+func (us *UserStorage) GetUser(query string, args ...interface{}) (*entity.User, error) {
+	row := us.DB.QueryRow(query, args...)
 	var userFromDB entity.User
 	err := row.Scan(&userFromDB.ID, &userFromDB.Username, &userFromDB.Email, &userFromDB.Phone, &userFromDB.Password)
 	if err != nil {
@@ -44,4 +42,14 @@ func (us *UserStorage) Get(userName string) (*entity.User, error) {
 		return nil, fmt.Errorf("unable to scan user from selected row: %w", err)
 	}
 	return &userFromDB, nil
+}
+
+func (us *UserStorage) GetByEmail(email string) (*entity.User, error) {
+	query := "SELECT id, username, email, phone, password FROM users WHERE email = $1"
+	return us.GetUser(query, email)
+}
+
+func (us *UserStorage) GetByName(userName string) (*entity.User, error) {
+	query := "SELECT id, username, email, phone, password FROM users WHERE username = $1"
+	return us.GetUser(query, userName)
 }

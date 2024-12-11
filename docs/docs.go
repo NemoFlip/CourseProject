@@ -86,8 +86,51 @@ const docTemplate = `{
                             "type": "nil"
                         }
                     },
+                    "400": {
+                        "description": "Invalid token is sent",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
                     "401": {
                         "description": "User is unauthorized",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/recovery": {
+            "post": {
+                "description": "recover your password by email code",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Recover password",
+                "parameters": [
+                    {
+                        "description": "email of the user",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.inputRecovery"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Token is valid",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid email",
                         "schema": {
                             "type": "nil"
                         }
@@ -184,6 +227,14 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "user_1234"
+                }
+            }
+        },
+        "handlers.inputRecovery": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
                 }
             }
         }

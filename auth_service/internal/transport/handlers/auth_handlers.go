@@ -16,10 +16,11 @@ type UserServer struct {
 	userStorage    database.UserStorage
 	refreshStorage database.RefreshStorage
 	tokenManager   auth.TokenManager
+	emailManager   *auth.EmailManager
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage}
+func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage, emailManager *auth.EmailManager) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager}
 }
 
 // @Summary Register user
@@ -72,7 +73,7 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userFromDB, err := us.userStorage.Get(user.Username)
+	userFromDB, err := us.userStorage.GetByName(user.Username)
 	if err != nil {
 		log.Printf("unable to find user in database: %s", err)
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
@@ -107,7 +108,7 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Security BearerAuth
 // @Success 200 {nil} nil "Token is valid"
 // @Failure 401 {nil} nil "User is unauthorized"
-// @Faiulre 400 {nil} nil "Invalid token is sent"
+// @Failure 400 {nil} nil "Invalid token is sent"
 // @Router /logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	// Delete refresh token from storage
@@ -122,4 +123,48 @@ func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	}
 	// Delete access_token from browser's cookie
 	ctx.SetCookie("Authorization", "", -1, "/", "", false, true)
+}
+
+type inputRecovery struct {
+	Email string `json:"email"`
+}
+
+// @Summary Recover password
+// @Description recover your password by email code
+// @Tags auth
+// @Accept json
+// @Param email body inputRecovery true "email of the user"
+// @Success 200 {nil} nil "Token is valid"
+// @Failure 400 {nil} nil "invalid email"
+// @Router /password/recovery [post]
+func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
+	var input inputRecovery
+	if err := ctx.BindJSON(&input); err != nil {
+		log.Printf("unable to get email: %s", err)
+		ctx.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	_, err := us.userStorage.GetByEmail(input.Email)
+	if err != nil {
+		log.Println(err)
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if us.emailManager != nil {
+		generatedCode := us.emailManager.GenerateVerifyCode() // как ограничить время жизни токена
+		if err = us.emailManager.SendCode(input.Email, generatedCode); err != nil {
+			log.Println(err)
+			ctx.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		log.Println("email manager is nil")
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// 2. compare written email with saved in database
+	// 3. send code to an email
+	// 4.
 }

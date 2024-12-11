@@ -29,12 +29,14 @@ func main() {
 	}
 
 	tokenManager := auth.NewTokenManager()
+	emailManager := auth.NewEmailManager()
 	refreshStorage := database.NewRefreshStorage()
+
 	if tokenManager == nil || refreshStorage == nil {
 		log.Fatalf("unable to connect to token_manager or to refresh_storage")
 	}
 	userStorage := database.NewUserStorage(db)
-	userServer := handlers.NewUserServer(*userStorage, *tokenManager, *refreshStorage)
+	userServer := handlers.NewUserServer(*userStorage, *tokenManager, *refreshStorage, emailManager)
 
 	router.POST("/registration", userServer.RegisterUser)
 	router.POST("/login", userServer.LoginUser)
@@ -45,8 +47,12 @@ func main() {
 		g1.POST("/logout", userServer.LogoutUser)
 	}
 
+	g2 := router.Group("/password")
+	{
+		g2.POST("/recovery", userServer.PasswordRecovery)
+	}
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.GET("/refresh_tokens")
 
 	err = router.Run(":8080")
 	if err != nil {
