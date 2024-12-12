@@ -10,17 +10,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"time"
 )
 
 type UserServer struct {
-	userStorage    database.UserStorage
-	refreshStorage database.RefreshStorage
-	tokenManager   auth.TokenManager
-	emailManager   *auth.EmailManager
+	userStorage       database.UserStorage
+	refreshStorage    database.RefreshStorage
+	tokenManager      auth.TokenManager
+	emailManager      *auth.EmailManager
+	verifyCodeStorage *database.VerifyCodeStorage
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage, emailManager *auth.EmailManager) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager}
+func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage, emailManager *auth.EmailManager, verifyCodeStorage *database.VerifyCodeStorage) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage}
 }
 
 // @Summary Register user
@@ -131,10 +133,11 @@ type inputRecovery struct {
 
 // @Summary Recover password
 // @Description recover your password by email code
-// @Tags auth
+// @Tags recovery
 // @Accept json
+// @Produce json
 // @Param email body inputRecovery true "email of the user"
-// @Success 200 {nil} nil "Token is valid"
+// @Success 200 {nil} nil "code was sent"
 // @Failure 400 {nil} nil "invalid email"
 // @Router /password/recovery [post]
 func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
@@ -144,7 +147,7 @@ func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	_, err := us.userStorage.GetByEmail(input.Email)
+	user, err := us.userStorage.GetByEmail(input.Email)
 	if err != nil {
 		log.Println(err)
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
@@ -152,19 +155,29 @@ func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 	}
 
 	if us.emailManager != nil {
-		generatedCode := us.emailManager.GenerateVerifyCode() // как ограничить время жизни токена
-		if err = us.emailManager.SendCode(input.Email, generatedCode); err != nil {
+		generatedCode := us.emailManager.GenerateVerifyCode()
+		expTime := time.Now().Add(time.Minute * 15).UTC()
+		verifyEntity := entity.VerifyCode{
+			Email:     input.Email,
+			Code:      generatedCode,
+			ExpiresAt: expTime,
+		}
+		if err = us.verifyCodeStorage.Post(verifyEntity); err != nil {
 			log.Println(err)
 			ctx.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		if err = us.emailManager.SendCode(user.Username, input.Email, generatedCode); err != nil {
+			log.Println(err)
+			ctx.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"email": input.Email,
+		})
 	} else {
 		log.Println("email manager is nil")
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	// 2. compare written email with saved in database
-	// 3. send code to an email
-	// 4.
 }

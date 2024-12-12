@@ -29,10 +29,27 @@ definitions:
         example: user_1234
         type: string
     type: object
+  handlers.codeInput:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+    type: object
   handlers.inputRecovery:
     properties:
       email:
         type: string
+    type: object
+  handlers.passwordInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
     type: object
 info:
   contact: {}
@@ -106,9 +123,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/handlers.inputRecovery'
+      produces:
+      - application/json
       responses:
         "200":
-          description: Token is valid
+          description: code was sent
           schema:
             type: nil
         "400":
@@ -117,7 +136,57 @@ paths:
             type: nil
       summary: Recover password
       tags:
-      - auth
+      - recovery
+  /password/update:
+    post:
+      consumes:
+      - application/json
+      description: update password for registered user
+      parameters:
+      - description: password and email of the user for recovery
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.passwordInput'
+      responses:
+        "200":
+          description: password is valid
+          schema:
+            type: nil
+        "400":
+          description: invalid code
+          schema:
+            type: nil
+      summary: Update Password
+      tags:
+      - recovery
+  /password/verify:
+    post:
+      consumes:
+      - application/json
+      description: compare passed code with the saved one
+      parameters:
+      - description: code and email of the user for recovery
+        in: body
+        name: code
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.codeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: code is valid
+          schema:
+            type: nil
+        "400":
+          description: invalid code
+          schema:
+            type: nil
+      summary: Verify Code
+      tags:
+      - recovery
   /registration:
     post:
       consumes:

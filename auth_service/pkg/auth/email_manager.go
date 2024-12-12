@@ -35,7 +35,7 @@ func (em *EmailManager) GenerateVerifyCode() string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return fmt.Sprintf("%06d", r.Intn(1000000))
 }
-func (em *EmailManager) SendCode(userEmail string, verifyCode string) error {
+func (em *EmailManager) SendCode(username string, userEmail string, verifyCode string) error {
 	auth := smtp.PlainAuth(
 		"",
 		em.email,
@@ -43,7 +43,7 @@ func (em *EmailManager) SendCode(userEmail string, verifyCode string) error {
 		em.host,
 	)
 	toEmail := userEmail
-	msg := fmt.Sprintf("Hello!\nVerification code for password recovery: %s.", verifyCode)
+	msg := fmt.Sprintf("Hello, %s!\nVerification code for password recovery: %s.", username, verifyCode)
 	htmlBody := fmt.Sprintf("To: %s\nSubject:Recovery\n%s", toEmail, msg)
 
 	err := smtp.SendMail(

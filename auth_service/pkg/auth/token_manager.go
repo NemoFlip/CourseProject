@@ -82,7 +82,7 @@ func (tm *TokenManager) PostRefreshToken(refreshStorage database.RefreshStorage,
 	refreshToken := entity.RefreshToken{
 		UserID:       userID,
 		RefreshToken: string(newHashedToken),
-		ExpiresAT:    expTime,
+		ExpiresAt:    expTime,
 	}
 
 	err = refreshStorage.Post(refreshToken)

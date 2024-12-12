@@ -107,8 +107,11 @@ const docTemplate = `{
                 "consumes": [
                     "application/json"
                 ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
-                    "auth"
+                    "recovery"
                 ],
                 "summary": "Recover password",
                 "parameters": [
@@ -124,13 +127,90 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Token is valid",
+                        "description": "code was sent",
                         "schema": {
                             "type": "nil"
                         }
                     },
                     "400": {
                         "description": "invalid email",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/update": {
+            "post": {
+                "description": "update password for registered user",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recovery"
+                ],
+                "summary": "Update Password",
+                "parameters": [
+                    {
+                        "description": "password and email of the user for recovery",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.passwordInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "password is valid",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid code",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/verify": {
+            "post": {
+                "description": "compare passed code with the saved one",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recovery"
+                ],
+                "summary": "Verify Code",
+                "parameters": [
+                    {
+                        "description": "code and email of the user for recovery",
+                        "name": "code",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.codeInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "code is valid",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid code",
                         "schema": {
                             "type": "nil"
                         }
@@ -230,10 +310,36 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.codeInput": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.inputRecovery": {
             "type": "object",
             "properties": {
                 "email": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.passwordInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
                     "type": "string"
                 }
             }

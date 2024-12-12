@@ -53,3 +53,22 @@ func (us *UserStorage) GetByName(userName string) (*entity.User, error) {
 	query := "SELECT id, username, email, phone, password FROM users WHERE username = $1"
 	return us.GetUser(query, userName)
 }
+
+func (us *UserStorage) Update(email, password string) error {
+	query := "UPDATE users SET password = $1 WHERE email = $2"
+	result, err := us.DB.Exec(query, password, email)
+	if err != nil {
+		return fmt.Errorf("unable to update user password: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("unable to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no user found with the provided email")
+	}
+
+	return nil
+}

@@ -31,25 +31,30 @@ func main() {
 	tokenManager := auth.NewTokenManager()
 	emailManager := auth.NewEmailManager()
 	refreshStorage := database.NewRefreshStorage()
+	verifyCodeStorage := database.NewVerifyCodeStorage()
 
 	if tokenManager == nil || refreshStorage == nil {
 		log.Fatalf("unable to connect to token_manager or to refresh_storage")
 	}
 	userStorage := database.NewUserStorage(db)
-	userServer := handlers.NewUserServer(*userStorage, *tokenManager, *refreshStorage, emailManager)
+	userServer := handlers.NewUserServer(*userStorage, *tokenManager, *refreshStorage, emailManager, verifyCodeStorage)
+	passRecoveryServer := handlers.NewPassRecoveryServer(verifyCodeStorage, *userStorage)
 
 	router.POST("/registration", userServer.RegisterUser)
 	router.POST("/login", userServer.LoginUser)
 
 	checkAuth := middleware.CheckAuthorization(tokenManager)
-	g1 := router.Group("/", checkAuth)
+	secureGroup := router.Group("/", checkAuth)
 	{
-		g1.POST("/logout", userServer.LogoutUser)
+		secureGroup.GET("/refresh")
+		secureGroup.POST("/logout", userServer.LogoutUser)
 	}
 
 	g2 := router.Group("/password")
 	{
 		g2.POST("/recovery", userServer.PasswordRecovery)
+		g2.POST("/verify", passRecoveryServer.VerifyCode)
+		g2.POST("/update", passRecoveryServer.UpdatePassword) // как разрешать /update только при успешном /verify?
 	}
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

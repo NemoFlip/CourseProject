@@ -7,6 +7,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"log"
 	"os"
+	"time"
 )
 
 type RefreshStorage struct {
@@ -15,13 +16,13 @@ type RefreshStorage struct {
 }
 
 func NewRefreshStorage() *RefreshStorage {
-	password := os.Getenv("REDIS_PASSWORD")
+	password := os.Getenv("REDIS_REFRESH_PASSWORD")
 	if password == "" {
 		log.Println("password for redis is unable to find")
 		return nil
 	}
 	client := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     "redis_refresh:6379",
 		Password: password,
 	})
 	return &RefreshStorage{
@@ -31,7 +32,11 @@ func NewRefreshStorage() *RefreshStorage {
 }
 
 func (rs *RefreshStorage) Post(refreshToken entity.RefreshToken) error {
-	err := rs.client.Set(rs.ctx, refreshToken.UserID, refreshToken.RefreshToken, 0).Err()
+	expiration := time.Until(refreshToken.ExpiresAt)
+	if expiration <= 0 {
+		return fmt.Errorf("token has already expired")
+	}
+	err := rs.client.Set(rs.ctx, refreshToken.UserID, refreshToken.RefreshToken, expiration).Err()
 	if err != nil {
 		return fmt.Errorf("unable to post refresh token: %s", err)
 	}
