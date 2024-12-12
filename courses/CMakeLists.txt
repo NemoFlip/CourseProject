@@ -2,6 +2,8 @@
 cmake_minimum_required (VERSION 3.8)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CURRENT_SOURCE_DIR D:/) 
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE STRING "Vcpkg toolchain file")
 
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
@@ -11,10 +13,11 @@ endif()
 project(courses)
 
 find_package(Drogon CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
+add_executable(${PROJECT_NAME} app/main.cpp 
+              src/cntrlr.cpp)
 
-add_executable(${PROJECT_NAME} app/main.cpp
-               include/cntrlr/cntrlr.hpp
- "src/cntrlr.cpp")
+target_link_libraries(${PROJECT_NAME} Drogon::Drogon)
+target_link_libraries(${PROJECT_NAME} spdlog)
 
-target_link_libraries(${PROJECT_NAME} Drogon::Drogon ${BOOST_LIBS} spdlog)
