@@ -5,7 +5,7 @@ class Logger {
 public:
   Logger(const Logger&) = delete;
   Logger(Logger&&) = delete;
-
+  ~Logger() = default;
   Logger& operator=(const Logger&) = delete;
   Logger& operator=(Logger&&) = delete;
 
@@ -17,11 +17,11 @@ public:
     return *instance;
   };
 
+
 private:
   Logger() {
     LOG=spdlog::basic_logger_mt("courses_logger", "log.txt");
   };
-  ~Logger() = default;
 
   static std::shared_ptr<Logger> instance;
   static std::shared_ptr<spdlog::logger> LOG;

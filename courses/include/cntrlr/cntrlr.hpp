@@ -6,10 +6,10 @@ class Cntrlr : public drogon::HttpController<Cntrlr> {
 public:
   METHOD_LIST_BEGIN
 
-  METHOD_ADD(Cntrlr::courses, "/courses/list", drogon::Get);
+  METHOD_ADD(Cntrlr::get_courses, "/courses/list", drogon::Get);
   METHOD_ADD(Cntrlr::join_course, "/courses/join_course", drogon::Post);
   METHOD_ADD(Cntrlr::leave_course, "/courses/leave_course", drogon::Delete);
-  METHOD_ADD(Cntrlr::assess, "/courses/assess_course", drogon::Put);
+  METHOD_ADD(Cntrlr::assess_course, "/courses/assess_course", drogon::Put);
 
   METHOD_LIST_END
 protected:
