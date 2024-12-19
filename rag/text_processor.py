@@ -1,7 +1,6 @@
 import re
 
 class TextProcessor:
-    """Класс для обработки текста и подготовки данных."""
     def __init__(self, input_file, output_file):
         self.input_file = input_file
         self.output_file = output_file
@@ -9,7 +8,6 @@ class TextProcessor:
         self.content = ""
 
     def process_dataset(self):
-        """Читает и обрабатывает текстовый датасет."""
         with open(self.input_file, 'r') as f:
             data = f.read()
 
