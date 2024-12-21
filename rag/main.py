@@ -65,7 +65,7 @@ async def query(request: QueryRequest):
         docs = vector_store_handler.search_similar(modified_question)
 
         if not validate_question_against_context(user_q_translate, docs[0]):
-            return {"response": "ПОШЕЛ НАХУЙ."}
+            return {"response": "Вопрос не по теме"}
 
         response = qa_service.get_answer(docs, modified_question)
         response_translate = translator.translate(response, src_lang="en", dest_lang="ru")
