@@ -3,11 +3,9 @@
 #include <shared_mutex>
 #include <vector>
 
-enum class QueryType{
-  Select,
-  Update,
-  Delete,
-  Insert
+struct basic_values {
+  std::string sorting = "1";
+  std::string condition = "1=1";
 };
 
 class Database {
@@ -26,34 +24,61 @@ public:
     return *instance;
   };
 
-  template<typename OutputDataType, typename... Args>
-  OutputDataType select_query(const std::string& from, Args... args) {
+  template<typename FUNCTION1, typename FUNCTION2, typename... Args>
+  void select_query(const std::string& from,
+    std::string& conditinon,
+    std::string& sorting,
+    FUNCTION1 rCallBack,
+    FUNCTION2 eCallback,
+    Args&&... args) {
     std::shared_lock<std::shared_mutex> lock(shmutex_);
-    try {
-      instance->select(std::format("select * from {}"), from, args);
-    }
-    catch (std::format_error) {
-      instance->select(std::format("select * from {} where {}"), from, args);
-    }
+    instance->commit(std::format("select * from {} where {} order by {} limit ? offset ?", from, condition, sorting),
+      std::forward<FUNCTION1>(rCallBack),
+      std::forward<FUNCTION2>(eCallback),
+      std::forward<Args...>(args));
   }
    
-  template<typename OutputDataType, typename... Args>
-  OutputDataType delete_query(const std::string& from, Args... args) {
+  template<typename FUNCTION1, typename FUNCTION2, typename... Args>
+  void delete_query(const std::string& from,
+    std::string& conditinon,
+    FUNCTION1 rCallBack,
+    FUNCTION2 eCallback,
+    Args&&... args) {
     std::unique_lock<std::shared_mutex> lock(shmutex_);
+    instance->commit(std::format("delete from {} where {}", from, condition),
+      std::forward<FUNCTION1>(rCallBack),
+      std::forward<FUNCTION2>(eCallback),
+      std::forward<Args...>(args));
+  } 
 
+  template<typename FUNCTION1, typename FUNCTION2, typename... Args>
+  void insert_query(const std::string& into,
+    std::string& parametrs,
+    std::string& value,
+    FUNCTION1 rCallBack,
+    FUNCTION2 eCallback,
+    Args&&... args) {
+    std::unique_lock<std::shared_mutex> lock(shmutex_);
+    instance->commit(std::format("insert into {} ({}) values ({})", into, parametrs, value),
+      std::forward<FUNCTION1>(rCallBack),
+      std::forward<FUNCTION2>(eCallback),
+      std::forward<Args...>(args));
   }
 
-  template<typename OutputDataType, typename... Args>
-  OutputDataType insert_query(const std::string& to, Args... args) {
+  template<typename FUNCTION1, typename FUNCTION2, typename... Args>
+  void update_query(const std::string& to,
+    std::string& upd_data,
+    std::string& condirion,
+    FUNCTION1 rCallBack,
+    FUNCTION2 eCallback,
+    Args&&... args) {
     std::unique_lock<std::shared_mutex> lock(shmutex_);
-
+    instance->commit(std::format("update {} set {} where {}", to, upd_data, condition),
+      std::forward<FUNCTION1>(rCallBack),
+      std::forward<FUNCTION2>(eCallback),
+      std::forward<Args...>(args));
   }
 
-  template<typename OutputDataType, typename... Args>
-  OutputDataType update_query(const std::string& to, Args... args) {
-    std::unique_lock<std::shared_mutex> lock(shmutex_);
-
-  }
 
 private:
   Database() {
@@ -61,10 +86,9 @@ private:
   };
   ~Database() = default;
 
-  template<typename OutputDataType, typename... Args>
-  void select(const std::string& query) {
-    std::unique_lock<std::shared_mutex> lock(shmutex_);
-
+  template<typename FUNCTION1, typename FUNCTION2, typename... Args>
+  void commit(const std::string& query, FUNCTION1&& rCallBack, FUNCTION2&& eCallBack, Args&&... args) {
+    instance->db_client->execSqlAsync(query, rCallBack, eCallBack, args);
   }
 
   static std::shared_ptr<Database> instance;
