@@ -1,7 +1,7 @@
 import os
 import pickle
 
-DATABASE_DIR = '/Users/a1111/test/face_verification/embeddings'
+DATABASE_DIR = ''
 os.makedirs(DATABASE_DIR, exist_ok=True)
 
 def save_embedding(user_id, embedding):
