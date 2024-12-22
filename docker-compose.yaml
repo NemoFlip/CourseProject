@@ -27,6 +27,8 @@ services:
       - SMTP_PORT
       - SMTP_PASSWORD
       - FROM_EMAIL
+    volumes:
+      - ./auth_service/cmd/log:/auth_service/cmd/log
   postgres_users:
     image: postgres
     ports:

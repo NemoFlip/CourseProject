@@ -5,6 +5,7 @@ import (
 	"CourseProject/auth_service/internal/transport/handlers"
 	"CourseProject/auth_service/internal/transport/middleware"
 	"CourseProject/auth_service/pkg/auth"
+	customLogger "CourseProject/auth_service/pkg/log"
 	_ "CourseProject/docs"
 	"CourseProject/pkg"
 
@@ -27,6 +28,10 @@ func main() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
+
+	logger := customLogger.InitLogger()
+
+	logger.Logger.Info().Msg("Logger initialized")
 
 	tokenManager := auth.NewTokenManager()
 	emailManager := auth.NewEmailManager()
