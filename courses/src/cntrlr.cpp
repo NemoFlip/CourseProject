@@ -1,35 +1,49 @@
 #include "../include/cntrlr/cntrlr.hpp"
+#include "../datastructures/Database.hpp"
+#include "../datastructures/Logclass.hpp"
 
+void Cntrlr::get_courses(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+  Json::Value courses_list;
 
-void Cntrlr::courses(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-  auto courses_table = drogon::app().getDbClient("courses");
-  
-  courses_table->execSqlAsync("select name, description, assess from courses",
-    [callback = std::move(callback)](const drogon::orm::Result& result) {
-      Json::Value courses_list;
-
-      if (result.empty()) {
-        courses_list["error"] = "No courses availaible";
-      } else for (auto& row : result) {
-        //adding row by row to the end
-        Json::Value tmp;
-        tmp["name"] = row["name"].as<std::string>();
-        tmp["description"] = row["description"].as<std::string>();
-        tmp["assess"] = row["assess"].as<int>();
-        courses_list.append(tmp);
+  Database::getInstance().select_query("courses", basic_values::condition, basic_values::sorting,
+    [callback = std::move(callback), &courses_list](const drogon::orm::Result& res) {
+      if (res.empty()) {
+        courses_list["Error"] = "No available courses";
       }
-      
-      auto resp = drogon::HttpResponse::newHttpJsonResponse(courses_list);
-      callback(resp);
+      else {
+        for (const auto& rows : res) {
+          Json::Value tmp;
+          
+          for (const auto& column : rows) {
+            if (!column.isNull()) {
+              tmp[column.name()] = column.as<std::string>();
+            }
+            else {
+              tmp[column.name()] = "Null";
+            }
+          }
+
+          courses_list.append(tmp);
+        }
+      }
+      auto req = drogon::HttpResponse::newHttpJsonResponse(courses_list);
+      callback(req);
     },
+    [callback = std::move(callback), &courses_list](const drogon::orm::DrogonDbException &exc) {
+      courses_list["Error"] = exc.base().what();
+      auto req = drogon::HttpResponse::newHttpJsonResponse(courses_list);
+      callback(req);
+    });
+}
 
-    [callback = std::move(callback)](const drogon::orm::DrogonDbException& e) {
-      Json::Value courses_list;
-      auto resp = drogon::HttpResponse::newHttpJsonResponse(courses_list);
+void Cntrlr::join_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
 
+}
 
+void Cntrlr::leave_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
 
-      callback(resp);
-    }
-  );
+}
+
+void Cntrlr::assess_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+
 }
