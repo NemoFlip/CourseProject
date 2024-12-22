@@ -5,7 +5,6 @@
 void Cntrlr::get_courses(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
   Json::Value courses_list;
 
-
   Database::getInstance().select_query("courses", basic_values::condition, basic_values::sorting,
     [callback = std::move(callback), &courses_list](const drogon::orm::Result& res) {
       if (res.empty()) {
@@ -30,9 +29,21 @@ void Cntrlr::get_courses(const drogon::HttpRequestPtr& req, std::function<void(c
       auto req = drogon::HttpResponse::newHttpJsonResponse(courses_list);
       callback(req);
     },
-    [callback = std::move(callback), &courses_list](const drogon::orm::DrogonDbException exc) {
+    [callback = std::move(callback), &courses_list](const drogon::orm::DrogonDbException &exc) {
       courses_list["Error"] = exc.base().what();
       auto req = drogon::HttpResponse::newHttpJsonResponse(courses_list);
       callback(req);
     });
+}
+
+void Cntrlr::join_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+
+}
+
+void Cntrlr::leave_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+
+}
+
+void Cntrlr::assess_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+
 }
