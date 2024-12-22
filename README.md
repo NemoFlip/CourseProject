@@ -5,10 +5,10 @@ Stack: Golang, C++, Docker, Swagger, PostgreSQL, JWT.
 
 Description: course platform where user can authorize, register for the courses, track his activity.
 
-Create .env file in root directory and add following value:
+Create .env file in root directory and add your secret values (there is an example):
 ```
-JWT_SECRET_KEY=<random string>
-REDIS_PASSWORD=<your password>
+JWT_SECRET_KEY=12345
+REDIS_PASSWORD=1234
 ```
 
 
