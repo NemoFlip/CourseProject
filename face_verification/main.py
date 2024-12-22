@@ -16,7 +16,7 @@ face_app.prepare(ctx_id=0)
 
 THRESHOLD = 0.6
 
-DATA_DIR = "/Users/a1111/test/face_verification/data"
+DATA_DIR = ""
 os.makedirs(DATA_DIR, exist_ok=True)
 
 
