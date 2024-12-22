@@ -4,9 +4,11 @@
 #include <vector>
 
 struct basic_values {
-  std::string sorting = "1";
-  std::string condition = "1=1";
+  const static std::string sorting;
+  const static std::string condition;
 };
+auto basic_values::condition = "1=1";
+auto basic_values::sorting = "1";
 
 class Database {
 
@@ -26,13 +28,13 @@ public:
 
   template<typename FUNCTION1, typename FUNCTION2, typename... Args>
   void select_query(const std::string& from,
-    std::string& conditinon,
-    std::string& sorting,
+    const std::string& conditinon,
+    const std::string& sorting,
     FUNCTION1 rCallBack,
     FUNCTION2 eCallback,
     Args&&... args) {
     std::shared_lock<std::shared_mutex> lock(shmutex_);
-    instance->commit(std::format("select * from {} where {} order by {} limit ? offset ?", from, condition, sorting),
+    instance->commit(std::format("select * from {} where {} order by {}", from, condition, sorting),
       std::forward<FUNCTION1>(rCallBack),
       std::forward<FUNCTION2>(eCallback),
       std::forward<Args...>(args));
@@ -40,7 +42,7 @@ public:
    
   template<typename FUNCTION1, typename FUNCTION2, typename... Args>
   void delete_query(const std::string& from,
-    std::string& conditinon,
+    const std::string& conditinon,
     FUNCTION1 rCallBack,
     FUNCTION2 eCallback,
     Args&&... args) {
@@ -53,8 +55,8 @@ public:
 
   template<typename FUNCTION1, typename FUNCTION2, typename... Args>
   void insert_query(const std::string& into,
-    std::string& parametrs,
-    std::string& value,
+    const std::string& parametrs,
+    const std::string& value,
     FUNCTION1 rCallBack,
     FUNCTION2 eCallback,
     Args&&... args) {
@@ -67,8 +69,8 @@ public:
 
   template<typename FUNCTION1, typename FUNCTION2, typename... Args>
   void update_query(const std::string& to,
-    std::string& upd_data,
-    std::string& condirion,
+    const std::string& upd_data,
+    const std::string& condirion,
     FUNCTION1 rCallBack,
     FUNCTION2 eCallback,
     Args&&... args) {
