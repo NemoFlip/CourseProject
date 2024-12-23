@@ -3,11 +3,11 @@ package router
 import (
 	"CourseProject/auth_service/internal/delivery/handlers"
 	"CourseProject/auth_service/internal/delivery/middleware"
-	"CourseProject/auth_service/pkg/auth"
+	"CourseProject/auth_service/pkg/managers"
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAuthRouters(r *gin.Engine, userServer *handlers.UserServer, tokenManager *auth.TokenManager, passRecoveryServer *handlers.PassRecoveryServer) {
+func RegisterAuthRouters(r *gin.Engine, userServer *handlers.UserServer, tokenManager *managers.TokenManager, passRecoveryServer *handlers.PassRecoveryServer) {
 	r.POST("/registration", userServer.RegisterUser)
 	r.POST("/login", userServer.LoginUser)
 

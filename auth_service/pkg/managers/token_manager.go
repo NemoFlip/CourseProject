@@ -1,15 +1,15 @@
-package auth
+package managers
 
 import (
 	"CourseProject/auth_service/internal/database"
 	"CourseProject/auth_service/internal/entity"
+	customLogger "CourseProject/auth_service/pkg/log"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -19,10 +19,10 @@ type TokenManager struct {
 	signingKey string
 }
 
-func NewTokenManager() *TokenManager {
+func NewTokenManager(logger *customLogger.Logger) *TokenManager {
 	signingKey, exists := os.LookupEnv("JWT_SECRET_KEY")
 	if !exists {
-		log.Printf("unable to parse jwt secret key from environment")
+		logger.ErrorLogger.Error().Msg("unable to parse jwt secret key from environment")
 		return nil
 	}
 	return &TokenManager{signingKey: signingKey}
@@ -78,7 +78,7 @@ func (tm *TokenManager) PostRefreshToken(refreshStorage database.RefreshStorage,
 	if err != nil {
 		return "", fmt.Errorf("unable to generate hashed refresh token: %s", err)
 	}
-	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh token is valid
+	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh_token is valid
 	refreshToken := entity.RefreshToken{
 		UserID:       userID,
 		RefreshToken: string(newHashedToken),
@@ -103,16 +103,16 @@ func (tm *TokenManager) GenerateBothTokens(refreshStorage database.RefreshStorag
 	return newAccessToken, newRefreshToken, nil
 }
 
-func (tm *TokenManager) GetUserID(ctx *gin.Context) (string, bool) {
+func (tm *TokenManager) GetUserID(ctx *gin.Context, logger *customLogger.Logger) (string, bool) {
 	userID, exists := ctx.Get("userID")
 	if !exists {
-		log.Println("invalid token credentials: userID is absent")
+		logger.ErrorLogger.Error().Msg("invalid token credentials: userID is absent")
 		ctx.Writer.WriteHeader(http.StatusUnauthorized)
 		return "", false
 	}
 	userIDStr, ok := userID.(string)
 	if !ok {
-		log.Println("userID is not a string")
+		logger.ErrorLogger.Error().Msg("userID is not a string")
 		ctx.Writer.WriteHeader(http.StatusUnauthorized)
 		return "", false
 	}

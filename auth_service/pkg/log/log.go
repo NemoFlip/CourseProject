@@ -11,20 +11,8 @@ import (
 )
 
 type Logger struct {
-	infoLogger  *zerolog.Logger
-	errorLogger *zerolog.Logger
-}
-
-func (l *Logger) Info(msg string) {
-	l.infoLogger.Info().Msg(msg)
-}
-
-func (l *Logger) Error(msg string) {
-	l.errorLogger.Error().Msg(msg)
-}
-
-func (l *Logger) Fatal(msg string) {
-	l.errorLogger.Fatal().Msg(msg)
+	InfoLogger  *zerolog.Logger
+	ErrorLogger *zerolog.Logger
 }
 
 func UnitFormatter() {
@@ -72,5 +60,5 @@ func InitLogger() *Logger {
 		Caller().
 		Logger()
 
-	return &Logger{infoLogger: &infoLogger, errorLogger: &errorLogger}
+	return &Logger{InfoLogger: &infoLogger, ErrorLogger: &errorLogger}
 }

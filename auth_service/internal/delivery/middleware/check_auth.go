@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"CourseProject/auth_service/pkg/auth"
+	"CourseProject/auth_service/pkg/managers"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"log"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func CheckAuthorization(tm *auth.TokenManager) gin.HandlerFunc {
+func CheckAuthorization(tm *managers.TokenManager) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 

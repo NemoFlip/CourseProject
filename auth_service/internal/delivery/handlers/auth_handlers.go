@@ -3,7 +3,8 @@ package handlers
 import (
 	"CourseProject/auth_service/internal/database"
 	"CourseProject/auth_service/internal/entity"
-	"CourseProject/auth_service/pkg/auth"
+	customLogger "CourseProject/auth_service/pkg/log"
+	"CourseProject/auth_service/pkg/managers"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,13 +17,14 @@ import (
 type UserServer struct {
 	userStorage       database.UserStorage
 	refreshStorage    database.RefreshStorage
-	tokenManager      auth.TokenManager
-	emailManager      *auth.EmailManager
+	tokenManager      managers.TokenManager
+	emailManager      *managers.EmailManager
 	verifyCodeStorage *database.VerifyCodeStorage
+	logger            *customLogger.Logger
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage, emailManager *auth.EmailManager, verifyCodeStorage *database.VerifyCodeStorage) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage}
+func NewUserServer(userStorage database.UserStorage, tokenManager managers.TokenManager, refreshStorage database.RefreshStorage, emailManager *managers.EmailManager, verifyCodeStorage *database.VerifyCodeStorage, logger *customLogger.Logger) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage, logger: logger}
 }
 
 // @Summary Register user
@@ -114,7 +116,7 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Router /logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	// Delete refresh token from storage
-	userID, ok := us.tokenManager.GetUserID(ctx)
+	userID, ok := us.tokenManager.GetUserID(ctx, us.logger)
 	if !ok {
 		return
 	}

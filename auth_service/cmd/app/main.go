@@ -4,8 +4,8 @@ import (
 	"CourseProject/auth_service/internal/database"
 	"CourseProject/auth_service/internal/delivery"
 	"CourseProject/auth_service/internal/delivery/handlers"
-	"CourseProject/auth_service/pkg/auth"
 	customLogger "CourseProject/auth_service/pkg/log"
+	"CourseProject/auth_service/pkg/managers"
 	_ "CourseProject/docs"
 	"CourseProject/pkg"
 )
@@ -15,22 +15,27 @@ func main() {
 
 	db, err := pkg.PostgresConnect("usersdb")
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.ErrorLogger.Fatal().Msg(err.Error())
 	}
-	logger.Info("usersdb in initialized")
+	logger.InfoLogger.Info().Msg("usersdb in initialized")
 
-	tokenManager := auth.NewTokenManager()
-	emailManager := auth.NewEmailManager()
-	refreshStorage := database.NewRefreshStorage()
-	verifyCodeStorage := database.NewVerifyCodeStorage()
+	tokenManager := managers.NewTokenManager(logger)
+	emailManager := managers.NewEmailManager(logger)
+	refreshStorage := database.NewRefreshStorage(logger)
+	verifyCodeStorage := database.NewVerifyCodeStorage(logger)
 
 	if tokenManager == nil || refreshStorage == nil {
-		logger.Fatal("unable to connect to token_manager or to refresh_storage")
+		logger.ErrorLogger.Fatal().Msg("unable to connect to token_manager or to refresh_storage")
 	}
 	userStorage := database.NewUserStorage(db)
-	userServer := handlers.NewUserServer(*userStorage, *tokenManager, *refreshStorage, emailManager, verifyCodeStorage)
-	passRecoveryServer := handlers.NewPassRecoveryServer(verifyCodeStorage, *userStorage)
+	userServer := handlers.NewUserServer(
+		*userStorage,
+		*tokenManager,
+		*refreshStorage,
+		emailManager,
+		verifyCodeStorage,
+		logger)
+	passRecoveryServer := handlers.NewPassRecoveryServer(verifyCodeStorage, *userStorage, logger)
 
 	delivery.StartServer(logger, userServer, tokenManager, passRecoveryServer)
-
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"CourseProject/auth_service/internal/database"
+	customLogger "CourseProject/auth_service/pkg/log"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -11,10 +12,11 @@ import (
 type PassRecoveryServer struct {
 	verifyCodeStorage *database.VerifyCodeStorage
 	userStorage       database.UserStorage
+	logger            *customLogger.Logger
 }
 
-func NewPassRecoveryServer(verifyCodeStorage *database.VerifyCodeStorage, userStorage database.UserStorage) *PassRecoveryServer {
-	return &PassRecoveryServer{verifyCodeStorage: verifyCodeStorage, userStorage: userStorage}
+func NewPassRecoveryServer(verifyCodeStorage *database.VerifyCodeStorage, userStorage database.UserStorage, logger *customLogger.Logger) *PassRecoveryServer {
+	return &PassRecoveryServer{verifyCodeStorage: verifyCodeStorage, userStorage: userStorage, logger: logger}
 }
 
 type codeInput struct {
