@@ -3,9 +3,9 @@ package handlers
 import (
 	"CourseProject/auth_service/internal/database"
 	customLogger "CourseProject/auth_service/pkg/log"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 )
 
@@ -36,23 +36,23 @@ type codeInput struct {
 func (rs *PassRecoveryServer) VerifyCode(ctx *gin.Context) {
 	var input codeInput
 	if err := ctx.BindJSON(&input); err != nil {
-		log.Printf("unable to get input for verification: %s", err)
+		rs.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to get input for verification: %s", err))
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	codeFromDB, err := rs.verifyCodeStorage.Get(input.Email)
 	if err != nil {
-		log.Println(err)
+		rs.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if input.Code != codeFromDB {
-		log.Println("invalid code from user")
+		rs.logger.ErrorLogger.Error().Msg("invalid code from user")
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if err = rs.verifyCodeStorage.Delete(input.Email); err != nil {
-		log.Println(err)
+		rs.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -79,19 +79,19 @@ type passwordInput struct {
 func (rs *PassRecoveryServer) UpdatePassword(ctx *gin.Context) {
 	var input passwordInput
 	if err := ctx.BindJSON(&input); err != nil {
-		log.Printf("unable to get input for updating password: %s", err)
+		rs.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to get input for updating password: %s", err))
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("unable to hash the password")
+		rs.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to hash the password: %s", err))
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err = rs.userStorage.Update(input.Email, string(hashedPassword)); err != nil {
-		log.Println(err)
+		rs.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}

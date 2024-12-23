@@ -23,7 +23,7 @@ func StartServer(logger *log.Logger, userServer *handlers.UserServer, tokenManag
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	router.InitRouting(r, userServer, tokenManager, passRecoveryServer)
+	router.InitRouting(r, logger, userServer, tokenManager, passRecoveryServer)
 
 	if err := r.Run(":8080"); err != nil {
 		logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to run server on port (:8080): %s", err))
