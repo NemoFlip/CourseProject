@@ -11,7 +11,20 @@ import (
 )
 
 type Logger struct {
-	Logger *zerolog.Logger
+	infoLogger  *zerolog.Logger
+	errorLogger *zerolog.Logger
+}
+
+func (l *Logger) Info(msg string) {
+	l.infoLogger.Info().Msg(msg)
+}
+
+func (l *Logger) Error(msg string) {
+	l.errorLogger.Error().Msg(msg)
+}
+
+func (l *Logger) Fatal(msg string) {
+	l.errorLogger.Fatal().Msg(msg)
 }
 
 func UnitFormatter() {
@@ -40,15 +53,24 @@ func InitLogger() *Logger {
 
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	loggerFile, err := os.OpenFile("auth_service/cmd/log/logs", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0660)
+	loggerInfoFile, err := os.OpenFile("auth_service/cmd/log/logs.info", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0660)
 	if err != nil {
-		panic("error opening log file")
+		panic("unable to open info log file")
 	}
-	newLogger := zerolog.New(loggerFile).With().
+	loggerErrorFile, err := os.OpenFile("auth_service/cmd/log/logs.error", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0660)
+	if err != nil {
+		panic("unable to open error log file")
+	}
+	infoLogger := zerolog.New(loggerInfoFile).With().
+		Timestamp().
+		Str("service", "auth_service").
+		Caller().
+		Logger()
+	errorLogger := zerolog.New(loggerErrorFile).With().
 		Timestamp().
 		Str("service", "auth_service").
 		Caller().
 		Logger()
 
-	return &Logger{Logger: &newLogger}
+	return &Logger{infoLogger: &infoLogger, errorLogger: &errorLogger}
 }
