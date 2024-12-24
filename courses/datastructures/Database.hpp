@@ -1,7 +1,5 @@
 #include <drogon/drogon.h>
-#include <mutex>
 #include <shared_mutex>
-#include <vector>
 
 struct basic_values {
   const static std::string sorting;
