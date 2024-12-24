@@ -3,12 +3,12 @@
 #include "../datastructures/Logclass.hpp"
 
 void Cntrlr::get_courses(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-  Json::Value courses_list;
+  Json::Value response_body;
 
   Database::getInstance().select_query("courses", basic_values::condition, basic_values::sorting,
-    [callback = std::move(callback), &courses_list](const drogon::orm::Result& res) {
+    [callback = std::move(callback), &response_body](const drogon::orm::Result& res) {
       if (res.empty()) {
-        courses_list["Error"] = "No available courses";
+        response_body["Error"] = "No available courses";
       }
       else {
         for (const auto& rows : res) {
@@ -23,21 +23,47 @@ void Cntrlr::get_courses(const drogon::HttpRequestPtr& req, std::function<void(c
             }
           }
 
-          courses_list.append(tmp);
+          response_body.append(tmp);
         }
       }
-      auto req = drogon::HttpResponse::newHttpJsonResponse(courses_list);
-      callback(req);
+      auto resp = drogon::HttpResponse::newHttpJsonResponse(response_body);
+      callback(resp);
     },
-    [callback = std::move(callback), &courses_list](const drogon::orm::DrogonDbException &exc) {
-      courses_list["Error"] = exc.base().what();
-      auto req = drogon::HttpResponse::newHttpJsonResponse(courses_list);
-      callback(req);
+    [callback = std::move(callback), &response_body](const drogon::orm::DrogonDbException &exc) {
+      response_body["Error"] = exc.base().what();
+      auto resp = drogon::HttpResponse::newHttpJsonResponse(response_body);
+      callback(resp);
     });
 }
 
 void Cntrlr::join_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+  auto body = req->getJsonObject();
 
+  if (!body || !body->isMember("course_id") || !body->isMember("user_id")) {
+    auto resp = drogon::HttpResponse::newHttpJsonResponse({ {"Error", "Invalid request"}});
+    resp->setStatusCode(drogon::k400BadRequest);
+    callback(resp);
+  }
+  else {
+    const std::string course_id = (*body)["course_id"].asString();
+    const std::string user_id = (*body)["user_id"].asString();
+
+    Json::Value response_body;
+    Database::getInstance().insert_query("courses_participation",
+      "user_id, course_id",
+      "?,?",
+      [callback = std::move(callback)](const drogon::orm::Result& result) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        callback(resp);
+      },
+      [callback = std::move(callback), &response_body](const drogon::orm::DrogonDbException& exc) {
+        response_body["Error"] = exc.base().what();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(response_body);
+        callback(resp);
+      },
+      user_id,
+      course_id);
+  }
 }
 
 void Cntrlr::leave_course(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
