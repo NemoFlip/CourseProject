@@ -15,18 +15,6 @@ type Logger struct {
 	ErrorLogger *zerolog.Logger
 }
 
-//func (l *Logger) Info(msg string) {
-//	l.infoLogger.Info().Msg(msg)
-//}
-//
-//func (l *Logger) Error(msg string) {
-//	l.errorLogger.Error().Msg(msg)
-//}
-//
-//func (l *Logger) Fatal(msg string) {
-//	l.errorLogger.Fatal().Msg(msg)
-//}
-
 func UnitFormatter() {
 	zerolog.TimestampFunc = func() time.Time {
 		format := "2006-01-02 15:04:05"

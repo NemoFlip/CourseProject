@@ -40,7 +40,7 @@ func NewUserServer(userStorage database.UserStorage, tokenManager managers.Token
 func (us *UserServer) RegisterUser(ctx *gin.Context) {
 	var newUser entity.User
 	if err := ctx.BindJSON(&newUser); err != nil {
-		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to parse user from JSON: %s\n", err))
+		us.logger.ErrorLogger.Error().Msgf("unable to parse user from JSON: %s\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid user's data"})
 		return
 	}
@@ -73,19 +73,19 @@ func (us *UserServer) RegisterUser(ctx *gin.Context) {
 func (us *UserServer) LoginUser(ctx *gin.Context) {
 	var user entity.User
 	if err := ctx.BindJSON(&user); err != nil {
-		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to read user from context for login: %s\n", err))
+		us.logger.ErrorLogger.Error().Msgf("unable to read user from context for login: %s\n", err)
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	userFromDB, err := us.userStorage.GetByName(user.Username)
 	if err != nil {
-		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to find user in database: %s", err))
+		us.logger.ErrorLogger.Error().Msgf("unable to find user in database: %s", err)
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(userFromDB.Password), []byte(user.Password))
 	if err != nil {
-		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("incorrect password: %s", err))
+		us.logger.ErrorLogger.Error().Msgf("incorrect password: %s", err)
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -145,7 +145,7 @@ type inputRecovery struct {
 func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 	var input inputRecovery
 	if err := ctx.BindJSON(&input); err != nil {
-		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to get email: %s", err))
+		us.logger.ErrorLogger.Error().Msgf("unable to get email: %s", err)
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}

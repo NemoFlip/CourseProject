@@ -5,7 +5,6 @@ import (
 	"CourseProject/auth_service/internal/delivery/router"
 	"CourseProject/auth_service/pkg/log"
 	"CourseProject/auth_service/pkg/managers"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -26,6 +25,6 @@ func StartServer(logger *log.Logger, userServer *handlers.UserServer, tokenManag
 	router.InitRouting(r, logger, userServer, tokenManager, passRecoveryServer)
 
 	if err := r.Run(":8080"); err != nil {
-		logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to run server on port (:8080): %s", err))
+		logger.ErrorLogger.Error().Msgf("unable to run server on port (:8080): %s", err)
 	}
 }
