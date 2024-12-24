@@ -2,10 +2,10 @@ package database
 
 import (
 	"CourseProject/auth_service/internal/entity"
+	customLogger "CourseProject/auth_service/pkg/log"
 	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"log"
 	"os"
 	"time"
 )
@@ -15,10 +15,10 @@ type VerifyCodeStorage struct {
 	ctx    context.Context
 }
 
-func NewVerifyCodeStorage() *VerifyCodeStorage {
+func NewVerifyCodeStorage(logger *customLogger.Logger) *VerifyCodeStorage {
 	password := os.Getenv("REDIS_VERIFY_PASSWORD")
 	if password == "" {
-		log.Println("password for redis is unable to find")
+		logger.ErrorLogger.Error().Msg("password for redis is unable to find")
 		return nil
 	}
 	client := redis.NewClient(&redis.Options{

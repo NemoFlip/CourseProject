@@ -1,6 +1,7 @@
-package auth
+package managers
 
 import (
+	customLogger "CourseProject/auth_service/pkg/log"
 	"fmt"
 	"math/rand"
 	"net/smtp"
@@ -15,7 +16,7 @@ type EmailManager struct {
 	email    string
 }
 
-func NewEmailManager() *EmailManager {
+func NewEmailManager(logger *customLogger.Logger) *EmailManager {
 	host := os.Getenv("SMTP_HOST")
 	port := os.Getenv("SMTP_PORT")
 	password := os.Getenv("SMTP_PASSWORD")
@@ -27,6 +28,7 @@ func NewEmailManager() *EmailManager {
 		email:    email,
 	}
 	if host == "" || port == "" || password == "" || email == "" {
+		logger.ErrorLogger.Error().Msg("unable to get env variable for email manager")
 		return nil
 	}
 	return &emailManager

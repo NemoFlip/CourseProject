@@ -3,7 +3,8 @@ package handlers
 import (
 	"CourseProject/auth_service/internal/database"
 	"CourseProject/auth_service/internal/entity"
-	"CourseProject/auth_service/pkg/auth"
+	customLogger "CourseProject/auth_service/pkg/log"
+	"CourseProject/auth_service/pkg/managers"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -16,13 +17,14 @@ import (
 type UserServer struct {
 	userStorage       database.UserStorage
 	refreshStorage    database.RefreshStorage
-	tokenManager      auth.TokenManager
-	emailManager      *auth.EmailManager
+	tokenManager      managers.TokenManager
+	emailManager      *managers.EmailManager
 	verifyCodeStorage *database.VerifyCodeStorage
+	logger            *customLogger.Logger
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenManager, refreshStorage database.RefreshStorage, emailManager *auth.EmailManager, verifyCodeStorage *database.VerifyCodeStorage) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage}
+func NewUserServer(userStorage database.UserStorage, tokenManager managers.TokenManager, refreshStorage database.RefreshStorage, emailManager *managers.EmailManager, verifyCodeStorage *database.VerifyCodeStorage, logger *customLogger.Logger) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage, logger: logger}
 }
 
 // @Summary Register user
@@ -38,7 +40,7 @@ func NewUserServer(userStorage database.UserStorage, tokenManager auth.TokenMana
 func (us *UserServer) RegisterUser(ctx *gin.Context) {
 	var newUser entity.User
 	if err := ctx.BindJSON(&newUser); err != nil {
-		log.Printf("unable to parse user from JSON: %s\n", err)
+		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to parse user from JSON: %s\n", err))
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid user's data"})
 		return
 	}
@@ -51,7 +53,7 @@ func (us *UserServer) RegisterUser(ctx *gin.Context) {
 	}
 	newUser.Password = string(hashedPassword)
 	if err = us.userStorage.Post(newUser); err != nil {
-		log.Println(err)
+		us.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "unable to post new user"})
 		return
 	}
@@ -71,26 +73,26 @@ func (us *UserServer) RegisterUser(ctx *gin.Context) {
 func (us *UserServer) LoginUser(ctx *gin.Context) {
 	var user entity.User
 	if err := ctx.BindJSON(&user); err != nil {
-		log.Printf("unable to read user from context for login: %s\n", err)
+		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to read user from context for login: %s\n", err))
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	userFromDB, err := us.userStorage.GetByName(user.Username)
 	if err != nil {
-		log.Printf("unable to find user in database: %s", err)
+		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to find user in database: %s", err))
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(userFromDB.Password), []byte(user.Password))
 	if err != nil {
-		log.Printf("incorrect password: %s", err)
+		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("incorrect password: %s", err))
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	accessToken, refreshToken, err := us.tokenManager.GenerateBothTokens(us.refreshStorage, userFromDB.ID)
 	if err != nil {
-		log.Println(err)
+		us.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -114,12 +116,12 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Router /logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	// Delete refresh token from storage
-	userID, ok := us.tokenManager.GetUserID(ctx)
+	userID, ok := us.tokenManager.GetUserID(ctx, us.logger)
 	if !ok {
 		return
 	}
 	if err := us.refreshStorage.Delete(userID); err != nil {
-		log.Println(err)
+		us.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -143,13 +145,13 @@ type inputRecovery struct {
 func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 	var input inputRecovery
 	if err := ctx.BindJSON(&input); err != nil {
-		log.Printf("unable to get email: %s", err)
+		us.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to get email: %s", err))
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	user, err := us.userStorage.GetByEmail(input.Email)
 	if err != nil {
-		log.Println(err)
+		us.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -163,12 +165,12 @@ func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 			ExpiresAt: expTime,
 		}
 		if err = us.verifyCodeStorage.Post(verifyEntity); err != nil {
-			log.Println(err)
+			us.logger.ErrorLogger.Error().Msg(err.Error())
 			ctx.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		if err = us.emailManager.SendCode(user.Username, input.Email, generatedCode); err != nil {
-			log.Println(err)
+			us.logger.ErrorLogger.Error().Msg(err.Error())
 			ctx.Writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -176,7 +178,7 @@ func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 			"email": input.Email,
 		})
 	} else {
-		log.Println("email manager is nil")
+		us.logger.ErrorLogger.Error().Msg("email manager is nil")
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
