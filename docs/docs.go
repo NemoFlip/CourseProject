@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/login": {
+        "/auth/login": {
             "post": {
                 "description": "login user by credentials",
                 "consumes": [
@@ -61,7 +61,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/logout": {
+        "/auth/logout": {
             "post": {
                 "security": [
                     {
@@ -101,124 +101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/password/recovery": {
-            "post": {
-                "description": "recover your password by email code",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "recovery"
-                ],
-                "summary": "Recover password",
-                "parameters": [
-                    {
-                        "description": "email of the user",
-                        "name": "email",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.inputRecovery"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "code was sent",
-                        "schema": {
-                            "type": "nil"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid email",
-                        "schema": {
-                            "type": "nil"
-                        }
-                    }
-                }
-            }
-        },
-        "/password/update": {
-            "post": {
-                "description": "update password for registered user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "recovery"
-                ],
-                "summary": "Update Password",
-                "parameters": [
-                    {
-                        "description": "password and email of the user for recovery",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.passwordInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "password is valid",
-                        "schema": {
-                            "type": "nil"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid code",
-                        "schema": {
-                            "type": "nil"
-                        }
-                    }
-                }
-            }
-        },
-        "/password/verify": {
-            "post": {
-                "description": "compare passed code with the saved one",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "recovery"
-                ],
-                "summary": "Verify Code",
-                "parameters": [
-                    {
-                        "description": "code and email of the user for recovery",
-                        "name": "code",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handlers.codeInput"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "code is valid",
-                        "schema": {
-                            "type": "nil"
-                        }
-                    },
-                    "400": {
-                        "description": "invalid code",
-                        "schema": {
-                            "type": "nil"
-                        }
-                    }
-                }
-            }
-        },
-        "/registration": {
+        "/auth/register": {
             "post": {
                 "description": "register user by credentials",
                 "consumes": [
@@ -259,6 +142,123 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/entity.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/request-reset": {
+            "post": {
+                "description": "recover your password by email code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recovery"
+                ],
+                "summary": "Recover password",
+                "parameters": [
+                    {
+                        "description": "email of the user",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.inputRecovery"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "code was sent",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid email",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/reset": {
+            "post": {
+                "description": "update password for registered user",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recovery"
+                ],
+                "summary": "Reset Password",
+                "parameters": [
+                    {
+                        "description": "password and email of the user for recovery",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.passwordInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "password is valid",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid code",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    }
+                }
+            }
+        },
+        "/password/validate-code": {
+            "post": {
+                "description": "compare passed code with the saved one",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recovery"
+                ],
+                "summary": "Validate Code",
+                "parameters": [
+                    {
+                        "description": "code and email of the user for recovery",
+                        "name": "code",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.codeInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "code is valid",
+                        "schema": {
+                            "type": "nil"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid code",
+                        "schema": {
+                            "type": "nil"
                         }
                     }
                 }

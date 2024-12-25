@@ -75,8 +75,6 @@ services:
       timeout: 30s
       retries: 5
 
-
-
   auth_tests:
     build:
       context: .

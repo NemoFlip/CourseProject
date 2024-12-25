@@ -36,7 +36,7 @@ func NewUserServer(userStorage database.UserStorage, tokenManager managers.Token
 // @Success 201 {object} entity.AuthResponse
 // @Failure 400 {object} entity.ErrorResponse
 // @Failure 500 {object} entity.ErrorResponse
-// @Router /registration [post]
+// @Router /auth/register [post]
 func (us *UserServer) RegisterUser(ctx *gin.Context) {
 	var newUser entity.User
 	if err := ctx.BindJSON(&newUser); err != nil {
@@ -69,7 +69,7 @@ func (us *UserServer) RegisterUser(ctx *gin.Context) {
 // @Success 200 {object} entity.AuthResponse
 // @Failure 400 {object} entity.ErrorResponse
 // @Failure 500 {object} entity.ErrorResponse
-// @Router /login [post]
+// @Router /auth/login [post]
 func (us *UserServer) LoginUser(ctx *gin.Context) {
 	var user entity.User
 	if err := ctx.BindJSON(&user); err != nil {
@@ -113,7 +113,7 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Success 200 {nil} nil "Token is valid"
 // @Failure 401 {nil} nil "User is unauthorized"
 // @Failure 400 {nil} nil "Invalid token is sent"
-// @Router /logout [post]
+// @Router /auth/logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	// Delete refresh token from storage
 	userID, ok := us.tokenManager.GetUserID(ctx, us.logger)
@@ -141,8 +141,9 @@ type inputRecovery struct {
 // @Param email body inputRecovery true "email of the user"
 // @Success 200 {nil} nil "code was sent"
 // @Failure 400 {nil} nil "invalid email"
-// @Router /password/recovery [post]
+// @Router /password/request-reset [post]
 func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
+	// TODO перенести в passwordRecovery
 	var input inputRecovery
 	if err := ctx.BindJSON(&input); err != nil {
 		us.logger.ErrorLogger.Error().Msgf("unable to get email: %s", err)
@@ -159,12 +160,7 @@ func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
 	if us.emailManager != nil {
 		generatedCode := us.emailManager.GenerateVerifyCode()
 		expTime := time.Now().Add(time.Minute * 15).UTC()
-		verifyEntity := entity.VerifyCode{
-			Email:     input.Email,
-			Code:      generatedCode,
-			ExpiresAt: expTime,
-		}
-		if err = us.verifyCodeStorage.Post(verifyEntity); err != nil {
+		if err = us.verifyCodeStorage.PostWithPrefix("verify_code", input.Email, generatedCode, expTime); err != nil {
 			us.logger.ErrorLogger.Error().Msg(err.Error())
 			ctx.Writer.WriteHeader(http.StatusInternalServerError)
 			return
