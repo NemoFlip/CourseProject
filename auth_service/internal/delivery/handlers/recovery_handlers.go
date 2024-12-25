@@ -3,7 +3,6 @@ package handlers
 import (
 	"CourseProject/auth_service/internal/database"
 	customLogger "CourseProject/auth_service/pkg/log"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -36,7 +35,7 @@ type codeInput struct {
 func (rs *PassRecoveryServer) VerifyCode(ctx *gin.Context) {
 	var input codeInput
 	if err := ctx.BindJSON(&input); err != nil {
-		rs.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to get input for verification: %s", err))
+		rs.logger.ErrorLogger.Error().Msgf("unable to get input for verification: %s", err)
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -79,13 +78,13 @@ type passwordInput struct {
 func (rs *PassRecoveryServer) UpdatePassword(ctx *gin.Context) {
 	var input passwordInput
 	if err := ctx.BindJSON(&input); err != nil {
-		rs.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to get input for updating password: %s", err))
+		rs.logger.ErrorLogger.Error().Msgf("unable to get input for updating password: %s", err)
 		ctx.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		rs.logger.ErrorLogger.Error().Msg(fmt.Sprintf("unable to hash the password: %s", err))
+		rs.logger.ErrorLogger.Error().Msgf("unable to hash the password: %s", err)
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
