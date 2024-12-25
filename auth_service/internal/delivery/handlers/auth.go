@@ -11,20 +11,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"time"
 )
 
 type UserServer struct {
-	userStorage       database.UserStorage
-	refreshStorage    database.RefreshStorage
-	tokenManager      managers.TokenManager
-	emailManager      *managers.EmailManager
-	verifyCodeStorage *database.VerifyCodeStorage
-	logger            *customLogger.Logger
+	userStorage    database.UserStorage
+	refreshStorage database.RefreshStorage
+	tokenManager   managers.TokenManager
+	logger         *customLogger.Logger
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager managers.TokenManager, refreshStorage database.RefreshStorage, emailManager *managers.EmailManager, verifyCodeStorage *database.VerifyCodeStorage, logger *customLogger.Logger) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage, logger: logger}
+func NewUserServer(userStorage database.UserStorage, tokenManager managers.TokenManager, refreshStorage database.RefreshStorage, logger *customLogger.Logger) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, logger: logger}
 }
 
 // @Summary Register user
@@ -127,55 +124,4 @@ func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	}
 	// Delete access_token from browser's cookie
 	ctx.SetCookie("Authorization", "", -1, "/", "", false, true)
-}
-
-type inputRecovery struct {
-	Email string `json:"email"`
-}
-
-// @Summary Recover password
-// @Description recover your password by email code
-// @Tags recovery
-// @Accept json
-// @Produce json
-// @Param email body inputRecovery true "email of the user"
-// @Success 200 {nil} nil "code was sent"
-// @Failure 400 {nil} nil "invalid email"
-// @Router /password/request-reset [post]
-func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
-	// TODO перенести в passwordRecovery
-	var input inputRecovery
-	if err := ctx.BindJSON(&input); err != nil {
-		us.logger.ErrorLogger.Error().Msgf("unable to get email: %s", err)
-		ctx.Writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	user, err := us.userStorage.GetByEmail(input.Email)
-	if err != nil {
-		us.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if us.emailManager != nil {
-		generatedCode := us.emailManager.GenerateVerifyCode()
-		expTime := time.Now().Add(time.Minute * 15).UTC()
-		if err = us.verifyCodeStorage.PostWithPrefix("verify_code", input.Email, generatedCode, expTime); err != nil {
-			us.logger.ErrorLogger.Error().Msg(err.Error())
-			ctx.Writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		if err = us.emailManager.SendCode(user.Username, input.Email, generatedCode); err != nil {
-			us.logger.ErrorLogger.Error().Msg(err.Error())
-			ctx.Writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		ctx.JSON(http.StatusOK, gin.H{
-			"email": input.Email,
-		})
-	} else {
-		us.logger.ErrorLogger.Error().Msg("email manager is nil")
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"CourseProject/auth_service/internal/database"
 	customLogger "CourseProject/auth_service/pkg/log"
+	"CourseProject/auth_service/pkg/managers"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -13,21 +14,74 @@ import (
 
 type PassRecoveryServer struct {
 	verifyCodeStorage *database.VerifyCodeStorage
+	emailManager      *managers.EmailManager
 	userStorage       database.UserStorage
 	logger            *customLogger.Logger
+
 	verifyCodePrefix  string
 	resetStatusPrefix string
 }
 
-func NewPassRecoveryServer(verifyCodeStorage *database.VerifyCodeStorage, userStorage database.UserStorage, logger *customLogger.Logger) *PassRecoveryServer {
+func NewPassRecoveryServer(verifyCodeStorage *database.VerifyCodeStorage, userStorage database.UserStorage, logger *customLogger.Logger, emailManager *managers.EmailManager) *PassRecoveryServer {
 	verifyCodePrefix := "verify_code"
 	resetStatusPrefix := "reset_status"
 	return &PassRecoveryServer{
 		verifyCodeStorage: verifyCodeStorage,
+		emailManager:      emailManager,
 		userStorage:       userStorage,
 		logger:            logger,
 		verifyCodePrefix:  verifyCodePrefix,
 		resetStatusPrefix: resetStatusPrefix,
+	}
+}
+
+type inputRecovery struct {
+	Email string `json:"email"`
+}
+
+// @Summary Recover password
+// @Description recover your password by email code
+// @Tags recovery
+// @Accept json
+// @Produce json
+// @Param email body inputRecovery true "email of the user"
+// @Success 200 {nil} nil "code was sent"
+// @Failure 400 {nil} nil "invalid email"
+// @Router /password/request-reset [post]
+func (rs *PassRecoveryServer) PasswordRecovery(ctx *gin.Context) {
+	var input inputRecovery
+	if err := ctx.BindJSON(&input); err != nil {
+		rs.logger.ErrorLogger.Error().Msgf("unable to get email: %s", err)
+		ctx.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	user, err := rs.userStorage.GetByEmail(input.Email)
+	if err != nil {
+		rs.logger.ErrorLogger.Error().Msg(err.Error())
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if rs.emailManager != nil {
+		generatedCode := rs.emailManager.GenerateVerifyCode()
+		expTime := time.Now().Add(time.Minute * 15).UTC()
+		if err = rs.verifyCodeStorage.PostWithPrefix("verify_code", input.Email, generatedCode, expTime); err != nil {
+			rs.logger.ErrorLogger.Error().Msg(err.Error())
+			ctx.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if err = rs.emailManager.SendCode(user.Username, input.Email, generatedCode); err != nil {
+			rs.logger.ErrorLogger.Error().Msg(err.Error())
+			ctx.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{
+			"email": input.Email,
+		})
+	} else {
+		rs.logger.ErrorLogger.Error().Msg("email manager is nil")
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 

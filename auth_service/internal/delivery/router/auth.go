@@ -20,7 +20,7 @@ func RegisterAuthRouters(r *gin.Engine, logger *customLogger.Logger, userServer 
 	}
 	g2 := r.Group("/password")
 	{
-		g2.POST("/request-reset", userServer.PasswordRecovery)
+		g2.POST("/request-reset", passRecoveryServer.PasswordRecovery)
 		g2.POST("/validate-code", passRecoveryServer.ValidateCode)
 		g2.POST("/reset", passRecoveryServer.ResetPassword)
 	}
