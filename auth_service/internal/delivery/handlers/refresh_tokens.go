@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"CourseProject/auth_service/internal/database"
-	"CourseProject/auth_service/internal/entity"
 	customLogger "CourseProject/auth_service/pkg/log"
 	"CourseProject/auth_service/pkg/managers"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"time"
 )
 
 type TokenServer struct {
@@ -68,20 +66,7 @@ func (ts *TokenServer) RefreshTokens(ctx *gin.Context) {
 		return
 	}
 
-	hashedRefreshToken, err := ts.tokenManager.GetHashedRefreshToken(newRefreshToken)
-	if err != nil {
-		ts.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh_token is valid
-	refreshToken := entity.RefreshToken{
-		UserID:       inputToken.UserID,
-		RefreshToken: hashedRefreshToken,
-		ExpiresAt:    expTime,
-	}
-	if err = ts.refreshStorage.Post(refreshToken); err != nil {
+	if err = ts.tokenManager.PostHashedRefreshToken(ts.refreshStorage, newRefreshToken, inputToken.UserID); err != nil {
 		ts.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return

@@ -2,6 +2,7 @@ package managers
 
 import (
 	"CourseProject/auth_service/internal/database"
+	"CourseProject/auth_service/internal/entity"
 	customLogger "CourseProject/auth_service/pkg/log"
 	"crypto/rand"
 	"encoding/base64"
@@ -112,6 +113,24 @@ func (tm *TokenManager) CompareRefreshTokens(refreshStorage database.RefreshStor
 	}
 	if err = bcrypt.CompareHashAndPassword([]byte(savedToken), []byte(inputToken)); err != nil {
 		return fmt.Errorf(err.Error())
+	}
+	return nil
+}
+
+func (tm *TokenManager) PostHashedRefreshToken(refreshStorage database.RefreshStorage, refreshToken, userID string) error {
+	hashedRefreshToken, err := tm.GetHashedRefreshToken(refreshToken)
+	if err != nil {
+		return err
+	}
+
+	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh_token is valid
+	refreshTokenEntity := entity.RefreshToken{
+		UserID:       userID,
+		RefreshToken: hashedRefreshToken,
+		ExpiresAt:    expTime,
+	}
+	if err = refreshStorage.Post(refreshTokenEntity); err != nil {
+		return err
 	}
 	return nil
 }
