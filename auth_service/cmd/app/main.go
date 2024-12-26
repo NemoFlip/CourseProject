@@ -33,7 +33,12 @@ func main() {
 		*tokenManager,
 		*refreshStorage,
 		logger)
-	passRecoveryServer := handlers.NewPassRecoveryServer(verifyCodeStorage, *userStorage, logger, emailManager)
+	passRecoveryServer := handlers.NewPassRecoveryServer(
+		verifyCodeStorage,
+		*userStorage,
+		logger,
+		emailManager)
+	tokenServer := handlers.NewTokenServer(*tokenManager, *refreshStorage, logger)
 
-	delivery.StartServer(logger, userServer, tokenManager, passRecoveryServer)
+	delivery.StartServer(logger, userServer, tokenManager, passRecoveryServer, tokenServer)
 }

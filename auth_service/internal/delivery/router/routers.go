@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouting(r *gin.Engine, logger *customLogger.Logger, userServer *handlers.UserServer, tokenManager *managers.TokenManager, passRecoveryServer *handlers.PassRecoveryServer) {
+func InitRouting(r *gin.Engine, logger *customLogger.Logger, userServer *handlers.UserServer, tokenManager *managers.TokenManager, passRecoveryServer *handlers.PassRecoveryServer, tokenServer *handlers.TokenServer) {
 	RegisterAuthRouters(r, logger, userServer, tokenManager, passRecoveryServer)
+	RegisterTokenRouters(r, logger, tokenManager, tokenServer)
 }

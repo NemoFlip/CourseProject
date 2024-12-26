@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"time"
 )
 
 type UserServer struct {
@@ -87,12 +88,31 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := us.tokenManager.GenerateBothTokens(us.refreshStorage, userFromDB.ID)
+	accessToken, refreshToken, err := us.tokenManager.GenerateBothTokens(userFromDB.ID)
 	if err != nil {
 		us.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	hashedRefreshToken, err := us.tokenManager.GetHashedRefreshToken(refreshToken)
+	if err != nil {
+		us.logger.ErrorLogger.Error().Msg(err.Error())
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh_token is valid
+	refreshTokenEntity := entity.RefreshToken{
+		UserID:       userFromDB.ID,
+		RefreshToken: hashedRefreshToken,
+		ExpiresAt:    expTime,
+	}
+	if err = us.refreshStorage.Post(refreshTokenEntity); err != nil {
+		us.logger.ErrorLogger.Error().Msg(err.Error())
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	ctx.SetCookie("access_token", accessToken, 900, "/", "", false, true)
 	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	ctx.JSON(http.StatusOK, gin.H{

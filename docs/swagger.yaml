@@ -51,6 +51,13 @@ definitions:
     - email
     - password
     type: object
+  handlers.refreshInput:
+    properties:
+      refreshToken:
+        type: string
+      userID:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is the auth services of course project
@@ -217,6 +224,30 @@ paths:
       summary: Validate Code
       tags:
       - recovery
+  /token/refresh:
+    post:
+      consumes:
+      - application/json
+      description: get access and refresh tokens via user_id
+      parameters:
+      - description: Данные для регистрации пользователя
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.refreshInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Refresh tokens
+      tags:
+      - tokens
 securityDefinitions:
   BearerAuth:
     in: header

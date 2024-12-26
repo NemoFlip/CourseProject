@@ -15,9 +15,9 @@ func RegisterAuthRouters(r *gin.Engine, logger *customLogger.Logger, userServer 
 	checkAuth := middleware.CheckAuthorization(tokenManager, logger)
 	secureGroup := r.Group("/", checkAuth)
 	{
-		secureGroup.GET("/token/refresh")
 		secureGroup.POST("/auth/logout", userServer.LogoutUser)
 	}
+
 	g2 := r.Group("/password")
 	{
 		g2.POST("/request-reset", passRecoveryServer.PasswordRecovery)
