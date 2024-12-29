@@ -11,20 +11,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"time"
 )
 
 type UserServer struct {
-	userStorage       database.UserStorage
-	refreshStorage    database.RefreshStorage
-	tokenManager      managers.TokenManager
-	emailManager      *managers.EmailManager
-	verifyCodeStorage *database.VerifyCodeStorage
-	logger            *customLogger.Logger
+	userStorage    database.UserStorage
+	refreshStorage database.RefreshStorage
+	tokenManager   managers.TokenManager
+	logger         *customLogger.Logger
 }
 
-func NewUserServer(userStorage database.UserStorage, tokenManager managers.TokenManager, refreshStorage database.RefreshStorage, emailManager *managers.EmailManager, verifyCodeStorage *database.VerifyCodeStorage, logger *customLogger.Logger) *UserServer {
-	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, emailManager: emailManager, verifyCodeStorage: verifyCodeStorage, logger: logger}
+func NewUserServer(userStorage database.UserStorage, tokenManager managers.TokenManager, refreshStorage database.RefreshStorage, logger *customLogger.Logger) *UserServer {
+	return &UserServer{userStorage: userStorage, tokenManager: tokenManager, refreshStorage: refreshStorage, logger: logger}
 }
 
 // @Summary Register user
@@ -36,7 +33,7 @@ func NewUserServer(userStorage database.UserStorage, tokenManager managers.Token
 // @Success 201 {object} entity.AuthResponse
 // @Failure 400 {object} entity.ErrorResponse
 // @Failure 500 {object} entity.ErrorResponse
-// @Router /registration [post]
+// @Router /auth/register [post]
 func (us *UserServer) RegisterUser(ctx *gin.Context) {
 	var newUser entity.User
 	if err := ctx.BindJSON(&newUser); err != nil {
@@ -69,7 +66,7 @@ func (us *UserServer) RegisterUser(ctx *gin.Context) {
 // @Success 200 {object} entity.AuthResponse
 // @Failure 400 {object} entity.ErrorResponse
 // @Failure 500 {object} entity.ErrorResponse
-// @Router /login [post]
+// @Router /auth/login [post]
 func (us *UserServer) LoginUser(ctx *gin.Context) {
 	var user entity.User
 	if err := ctx.BindJSON(&user); err != nil {
@@ -90,12 +87,18 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := us.tokenManager.GenerateBothTokens(us.refreshStorage, userFromDB.ID)
+	accessToken, refreshToken, err := us.tokenManager.GenerateBothTokens(userFromDB.ID)
 	if err != nil {
 		us.logger.ErrorLogger.Error().Msg(err.Error())
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	if err = us.tokenManager.PostHashedRefreshToken(us.refreshStorage, refreshToken, userFromDB.ID); err != nil {
+		us.logger.ErrorLogger.Error().Msg(err.Error())
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	ctx.SetCookie("access_token", accessToken, 900, "/", "", false, true)
 	ctx.Header("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	ctx.JSON(http.StatusOK, gin.H{
@@ -113,7 +116,7 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Success 200 {nil} nil "Token is valid"
 // @Failure 401 {nil} nil "User is unauthorized"
 // @Failure 400 {nil} nil "Invalid token is sent"
-// @Router /logout [post]
+// @Router /auth/logout [post]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	// Delete refresh token from storage
 	userID, ok := us.tokenManager.GetUserID(ctx, us.logger)
@@ -127,59 +130,4 @@ func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	}
 	// Delete access_token from browser's cookie
 	ctx.SetCookie("Authorization", "", -1, "/", "", false, true)
-}
-
-type inputRecovery struct {
-	Email string `json:"email"`
-}
-
-// @Summary Recover password
-// @Description recover your password by email code
-// @Tags recovery
-// @Accept json
-// @Produce json
-// @Param email body inputRecovery true "email of the user"
-// @Success 200 {nil} nil "code was sent"
-// @Failure 400 {nil} nil "invalid email"
-// @Router /password/recovery [post]
-func (us *UserServer) PasswordRecovery(ctx *gin.Context) {
-	var input inputRecovery
-	if err := ctx.BindJSON(&input); err != nil {
-		us.logger.ErrorLogger.Error().Msgf("unable to get email: %s", err)
-		ctx.Writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	user, err := us.userStorage.GetByEmail(input.Email)
-	if err != nil {
-		us.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if us.emailManager != nil {
-		generatedCode := us.emailManager.GenerateVerifyCode()
-		expTime := time.Now().Add(time.Minute * 15).UTC()
-		verifyEntity := entity.VerifyCode{
-			Email:     input.Email,
-			Code:      generatedCode,
-			ExpiresAt: expTime,
-		}
-		if err = us.verifyCodeStorage.Post(verifyEntity); err != nil {
-			us.logger.ErrorLogger.Error().Msg(err.Error())
-			ctx.Writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		if err = us.emailManager.SendCode(user.Username, input.Email, generatedCode); err != nil {
-			us.logger.ErrorLogger.Error().Msg(err.Error())
-			ctx.Writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		ctx.JSON(http.StatusOK, gin.H{
-			"email": input.Email,
-		})
-	} else {
-		us.logger.ErrorLogger.Error().Msg("email manager is nil")
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 }

@@ -9,20 +9,19 @@ import (
 )
 
 func RegisterAuthRouters(r *gin.Engine, logger *customLogger.Logger, userServer *handlers.UserServer, tokenManager *managers.TokenManager, passRecoveryServer *handlers.PassRecoveryServer) {
-	r.POST("/registration", userServer.RegisterUser)
-	r.POST("/login", userServer.LoginUser)
+	r.POST("/auth/register", userServer.RegisterUser)
+	r.POST("/auth/login", userServer.LoginUser)
 
 	checkAuth := middleware.CheckAuthorization(tokenManager, logger)
 	secureGroup := r.Group("/", checkAuth)
 	{
-		secureGroup.GET("/refresh")
-		secureGroup.POST("/logout", userServer.LogoutUser)
+		secureGroup.POST("/auth/logout", userServer.LogoutUser)
 	}
 
 	g2 := r.Group("/password")
 	{
-		g2.POST("/recovery", userServer.PasswordRecovery)
-		g2.POST("/verify", passRecoveryServer.VerifyCode)
-		g2.POST("/update", passRecoveryServer.UpdatePassword) // как разрешать /update только при успешном /verify?
+		g2.POST("/request-reset", passRecoveryServer.PasswordRecovery)
+		g2.POST("/validate-code", passRecoveryServer.ValidateCode)
+		g2.POST("/reset", passRecoveryServer.ResetPassword)
 	}
 }

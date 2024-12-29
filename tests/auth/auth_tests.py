@@ -14,7 +14,7 @@ def user_data():
     return {'username': username, 'email': email, 'phone': phone, 'password': password}
 
 def test_register_user(user_data):
-    register_url = f"{BASE_URL}/registration"
+    register_url = f"{BASE_URL}/auth/register"
 
     response = requests.post(register_url, json=user_data)
 

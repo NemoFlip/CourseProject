@@ -51,12 +51,19 @@ definitions:
     - email
     - password
     type: object
+  handlers.refreshInput:
+    properties:
+      refreshToken:
+        type: string
+      userID:
+        type: string
+    type: object
 info:
   contact: {}
   description: This is the auth services of course project
   title: Auth Service
 paths:
-  /login:
+  /auth/login:
     post:
       consumes:
       - application/json
@@ -86,7 +93,7 @@ paths:
       summary: Login user
       tags:
       - auth
-  /logout:
+  /auth/logout:
     post:
       consumes:
       - application/json
@@ -111,83 +118,7 @@ paths:
       summary: Logout user
       tags:
       - auth
-  /password/recovery:
-    post:
-      consumes:
-      - application/json
-      description: recover your password by email code
-      parameters:
-      - description: email of the user
-        in: body
-        name: email
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.inputRecovery'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: code was sent
-          schema:
-            type: nil
-        "400":
-          description: invalid email
-          schema:
-            type: nil
-      summary: Recover password
-      tags:
-      - recovery
-  /password/update:
-    post:
-      consumes:
-      - application/json
-      description: update password for registered user
-      parameters:
-      - description: password and email of the user for recovery
-        in: body
-        name: password
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.passwordInput'
-      responses:
-        "200":
-          description: password is valid
-          schema:
-            type: nil
-        "400":
-          description: invalid code
-          schema:
-            type: nil
-      summary: Update Password
-      tags:
-      - recovery
-  /password/verify:
-    post:
-      consumes:
-      - application/json
-      description: compare passed code with the saved one
-      parameters:
-      - description: code and email of the user for recovery
-        in: body
-        name: code
-        required: true
-        schema:
-          $ref: '#/definitions/handlers.codeInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: code is valid
-          schema:
-            type: nil
-        "400":
-          description: invalid code
-          schema:
-            type: nil
-      summary: Verify Code
-      tags:
-      - recovery
-  /registration:
+  /auth/register:
     post:
       consumes:
       - application/json
@@ -217,6 +148,106 @@ paths:
       summary: Register user
       tags:
       - auth
+  /password/request-reset:
+    post:
+      consumes:
+      - application/json
+      description: recover your password by email code
+      parameters:
+      - description: email of the user
+        in: body
+        name: email
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.inputRecovery'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: code was sent
+          schema:
+            type: nil
+        "400":
+          description: invalid email
+          schema:
+            type: nil
+      summary: Recover password
+      tags:
+      - recovery
+  /password/reset:
+    post:
+      consumes:
+      - application/json
+      description: update password for registered user
+      parameters:
+      - description: password and email of the user for recovery
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.passwordInput'
+      responses:
+        "200":
+          description: password is valid
+          schema:
+            type: nil
+        "400":
+          description: invalid code
+          schema:
+            type: nil
+      summary: Reset Password
+      tags:
+      - recovery
+  /password/validate-code:
+    post:
+      consumes:
+      - application/json
+      description: compare passed code with the saved one
+      parameters:
+      - description: code and email of the user for recovery
+        in: body
+        name: code
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.codeInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: code is valid
+          schema:
+            type: nil
+        "400":
+          description: invalid code
+          schema:
+            type: nil
+      summary: Validate Code
+      tags:
+      - recovery
+  /token/refresh:
+    post:
+      consumes:
+      - application/json
+      description: get access and refresh tokens via user_id
+      parameters:
+      - description: Данные для регистрации пользователя
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.refreshInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+      security:
+      - BearerAuth: []
+      summary: Refresh tokens
+      tags:
+      - tokens
 securityDefinitions:
   BearerAuth:
     in: header

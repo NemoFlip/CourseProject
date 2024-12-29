@@ -59,7 +59,7 @@ func (tm *TokenManager) GenerateAccessToken(userID string, signingMethod jwt.Sig
 	return signedAccessToken, nil
 }
 
-func (tm *TokenManager) CreateRefreshToken() (string, error) {
+func (tm *TokenManager) GenerateRefreshToken() (string, error) {
 	tokenSlice := make([]byte, 32)
 	_, err := rand.Read(tokenSlice)
 	if err != nil {
@@ -69,34 +69,21 @@ func (tm *TokenManager) CreateRefreshToken() (string, error) {
 	return tokenString, nil
 }
 
-func (tm *TokenManager) PostRefreshToken(refreshStorage database.RefreshStorage, userID string) (string, error) {
-	refreshTokenString, err := tm.CreateRefreshToken()
-	if err != nil {
-		return "", err
-	}
-	newHashedToken, err := bcrypt.GenerateFromPassword([]byte(refreshTokenString), bcrypt.DefaultCost)
+func (tm *TokenManager) GetHashedRefreshToken(refreshToken string) (string, error) {
+	newHashedToken, err := bcrypt.GenerateFromPassword([]byte(refreshToken), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("unable to generate hashed refresh token: %s", err)
 	}
-	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh_token is valid
-	refreshToken := entity.RefreshToken{
-		UserID:       userID,
-		RefreshToken: string(newHashedToken),
-		ExpiresAt:    expTime,
-	}
 
-	err = refreshStorage.Post(refreshToken)
-	if err != nil {
-		return "", err
-	}
-	return refreshTokenString, nil
+	return string(newHashedToken), nil
 }
-func (tm *TokenManager) GenerateBothTokens(refreshStorage database.RefreshStorage, userID string) (string, string, error) {
-	newAccessToken, err := tm.GenerateAccessToken(userID, jwt.SigningMethodHS512)
+
+func (tm *TokenManager) GenerateBothTokens(userID string) (newAccessToken string, newRefreshToken string, err error) {
+	newAccessToken, err = tm.GenerateAccessToken(userID, jwt.SigningMethodHS512)
 	if err != nil {
 		return "", "", err
 	}
-	newRefreshToken, err := tm.PostRefreshToken(refreshStorage, userID)
+	newRefreshToken, err = tm.GenerateRefreshToken()
 	if err != nil {
 		return "", "", err
 	}
@@ -117,4 +104,33 @@ func (tm *TokenManager) GetUserID(ctx *gin.Context, logger *customLogger.Logger)
 		return "", false
 	}
 	return userIDStr, true
+}
+
+func (tm *TokenManager) CompareRefreshTokens(refreshStorage database.RefreshStorage, inputToken, userID string) error {
+	savedToken, err := refreshStorage.Get(userID)
+	if err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	if err = bcrypt.CompareHashAndPassword([]byte(savedToken), []byte(inputToken)); err != nil {
+		return fmt.Errorf(err.Error())
+	}
+	return nil
+}
+
+func (tm *TokenManager) PostHashedRefreshToken(refreshStorage database.RefreshStorage, refreshToken, userID string) error {
+	hashedRefreshToken, err := tm.GetHashedRefreshToken(refreshToken)
+	if err != nil {
+		return err
+	}
+
+	expTime := time.Now().Add(time.Minute * 43200).UTC() // 30 days refresh_token is valid
+	refreshTokenEntity := entity.RefreshToken{
+		UserID:       userID,
+		RefreshToken: hashedRefreshToken,
+		ExpiresAt:    expTime,
+	}
+	if err = refreshStorage.Post(refreshTokenEntity); err != nil {
+		return err
+	}
+	return nil
 }
