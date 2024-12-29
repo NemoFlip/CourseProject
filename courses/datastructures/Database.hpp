@@ -68,7 +68,7 @@ public:
   template<typename FUNCTION1, typename FUNCTION2, typename... Args>
   void update_query(const std::string& to,
     const std::string& upd_data,
-    const std::string& condirion,
+    const std::string& condition,
     FUNCTION1 rCallBack,
     FUNCTION2 eCallback,
     Args&&... args) {
