@@ -1,4 +1,4 @@
-package pkg
+package db
 
 import (
 	"CourseProject/auth_service/config"

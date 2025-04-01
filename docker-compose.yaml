@@ -12,17 +12,11 @@ services:
         condition: service_healthy
       redis_verify:
         condition: service_healthy
-    environment:
-      - DB_SOURCE_NAME
-      - JWT_SECRET_KEY
-      - REDIS_REFRESH_PASSWORD
-      - REDIS_VERIFY_PASSWORD
-      - SMTP_HOST
-      - SMTP_PORT
-      - SMTP_PASSWORD
-      - FROM_EMAIL
+    env_file:
+      - .env
     volumes:
       - ./auth_service/cmd/log:/auth_service/cmd/log
+      - ./auth_service/config:/auth_service/config
   postgres_users:
     container_name: postgres_users
     image: postgres
