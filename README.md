@@ -8,7 +8,18 @@ Description: course platform where user can authorize, register for the courses,
 Create .env file in root directory and add your secret values (there is an example):
 ```
 JWT_SECRET_KEY=12345
-REDIS_PASSWORD=12345
+REDIS_REFRESH_PASSWORD=12345
+REDIS_VERIFY_PASSWORD=12345
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_PASSWORD=pass
+FROM_EMAIL=email
+
+DB_USER=admin
+DB_PASSWORD=admin
+DB_SOURCE_NAME=postgres://admin:admin@postgres_users:5432/usersdb?sslmode=disable
+DB_PORT=5432
+
 ```
 
 
