@@ -1,0 +1,1 @@
+{"level":"info","service":"auth_service","time":"2025-04-01T18:00:40Z","caller":"app/app.mustConnectDB:66","message":"Connected to database: usersdb"}

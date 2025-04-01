@@ -1,0 +1,5 @@
+env: "local" #local, dev, prod
+http_server:
+  address: "8080"
+users_db:
+  name: "usersdb"
