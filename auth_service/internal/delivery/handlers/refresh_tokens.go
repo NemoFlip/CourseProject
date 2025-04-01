@@ -42,33 +42,33 @@ func (ts *TokenServer) RefreshTokens(ctx *gin.Context) {
 	var inputToken refreshInput
 	if err := ctx.BindJSON(&inputToken); err != nil {
 		ts.logger.ErrorLogger.Error().Msgf("invalid input for refreshing tokens: %s", err)
-		ctx.Writer.WriteHeader(http.StatusBadRequest)
+		ctx.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
 	// Compare it with already saved token
 	if err := ts.tokenManager.CompareRefreshTokens(ts.refreshStorage, inputToken.RefreshToken, inputToken.UserID); err != nil {
 		ts.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 
 	newAccessToken, newRefreshToken, err := ts.tokenManager.GenerateBothTokens(inputToken.UserID)
 	if err != nil {
 		ts.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	if err = ts.refreshStorage.Delete(inputToken.UserID); err != nil {
 		ts.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
 	if err = ts.tokenManager.PostHashedRefreshToken(ts.refreshStorage, newRefreshToken, inputToken.UserID); err != nil {
 		ts.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 

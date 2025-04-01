@@ -58,7 +58,6 @@ func (rs *PassRecoveryServer) PasswordRecovery(ctx *gin.Context) {
 	user, err := rs.userStorage.GetByEmail(input.Email)
 	if err != nil {
 		rs.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

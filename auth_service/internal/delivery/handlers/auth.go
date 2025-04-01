@@ -116,16 +116,18 @@ func (us *UserServer) LoginUser(ctx *gin.Context) {
 // @Success 200 {nil} nil "Token is valid"
 // @Failure 401 {nil} nil "User is unauthorized"
 // @Failure 400 {nil} nil "Invalid token is sent"
-// @Router /auth/logout [post]
+// @Router /auth/logout [delete]
 func (us *UserServer) LogoutUser(ctx *gin.Context) {
 	// Delete refresh token from storage
 	userID, ok := us.tokenManager.GetUserID(ctx, us.logger)
 	if !ok {
+		us.logger.ErrorLogger.Error().Msg("failed to get user id")
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	if err := us.refreshStorage.Delete(userID); err != nil {
 		us.logger.ErrorLogger.Error().Msg(err.Error())
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	// Delete access_token from browser's cookie

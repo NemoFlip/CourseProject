@@ -13,6 +13,7 @@ services:
       redis_verify:
         condition: service_healthy
     environment:
+      - DB_SOURCE_NAME
       - JWT_SECRET_KEY
       - REDIS_REFRESH_PASSWORD
       - REDIS_VERIFY_PASSWORD
@@ -23,9 +24,10 @@ services:
     volumes:
       - ./auth_service/cmd/log:/auth_service/cmd/log
   postgres_users:
+    container_name: postgres_users
     image: postgres
     ports:
-      - 5432:5432
+      - '5433:5432'
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
